@@ -5,7 +5,10 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-06-20',
+  // Use the SDK's default pinned version to satisfy types
+  // or fallback to 'latest' to avoid type mismatch in CI/build
+  // Remove this field to use the SDK default
+  // apiVersion: 'latest',
 });
 
 export const stripeConfig = {
