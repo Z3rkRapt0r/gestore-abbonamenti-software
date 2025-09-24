@@ -31,7 +31,10 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     const custom_config: Record<string, unknown> | undefined = (updatedSubscriber as unknown as { custom_config?: Record<string, unknown> }).custom_config;
 
     // Fallback globale dalla tabella configurations
-    let maintenanceDeploymentId: string | undefined = custom_config?.maintenanceDeploymentId;
+    let maintenanceDeploymentId: string | undefined = undefined;
+    if (custom_config && typeof (custom_config as Record<string, unknown>)["maintenanceDeploymentId"] === "string") {
+      maintenanceDeploymentId = (custom_config as Record<string, unknown>)["maintenanceDeploymentId"] as string;
+    }
     if (!maintenanceDeploymentId) {
       const { data: globalCfg } = await supabaseAdmin
         .from('configurations')
@@ -40,9 +43,11 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
         .single();
       maintenanceDeploymentId = (globalCfg as unknown as { maintenance_deployment_id?: string })?.maintenance_deployment_id || maintenanceDeploymentId;
     }
-    const domains: string[] = Array.isArray(custom_config?.domains)
-      ? custom_config.domains
-      : [];
+    let domains: string[] = [];
+    const domainsValue = custom_config ? (custom_config as Record<string, unknown>)["domains"] : undefined;
+    if (Array.isArray(domainsValue)) {
+      domains = (domainsValue as unknown[]).filter((d): d is string => typeof d === "string");
+    }
 
     const isNowActive = !!updatedSubscriber.is_active;
 
