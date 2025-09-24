@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/providers";
 import { ModernSubscriberForm } from "@/components/forms/modern-subscriber-form";
-import { CreateSubscriberData, Subscriber } from "@/types";
+import { Subscriber } from "@/types";
 
 export default function Dashboard() {
   const { user, loading, signOut } = useAuth();
@@ -90,7 +90,7 @@ export default function Dashboard() {
     return null;
   }
 
-  const handleSubmit = async (data: CreateSubscriberData) => {
+  const handleSubmit = async (data: unknown) => {
     setIsSubmitting(true);
     
     try {
