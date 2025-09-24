@@ -4,11 +4,11 @@ import { db } from "@/lib/database";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // PUT /api/subscribers/[id]/toggle - Attiva/disattiva abbonato
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     await requireAuth();
 
-    const { id } = params;
+    const { id } = await context.params;
     const updatedSubscriber = await db.toggleSubscriberStatus(id);
 
     if (!updatedSubscriber) {
