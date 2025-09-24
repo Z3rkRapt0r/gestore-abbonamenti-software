@@ -6,11 +6,17 @@ import { useRouter } from "next/navigation";
 
 interface Configuration {
   id: string;
-  githubToken: string;
-  githubUsername: string;
-  createdAt: string;
-  updatedAt: string;
+  // CamelCase fields (local form shape)
+  githubToken?: string;
+  githubUsername?: string;
+  createdAt?: string;
+  updatedAt?: string;
   maintenanceDeploymentId?: string;
+  // Snake_case fields (API response shape)
+  github_token?: string;
+  github_username?: string;
+  updated_at?: string;
+  maintenance_deployment_id?: string;
 }
 
 export default function Settings() {
@@ -162,7 +168,7 @@ export default function Settings() {
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900">GitHub</h3>
                 </div>
-                {config && config.github_username && (
+                {config && (config.github_username || config.githubUsername) && (
                   <div className="flex items-center text-green-600 text-sm">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -222,7 +228,7 @@ export default function Settings() {
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900">Stripe</h3>
                 </div>
-                {config && config.stripe_secret_key && (
+                {config && (config as any).stripe_secret_key && (
                   <div className="flex items-center text-green-600 text-sm">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -339,8 +345,8 @@ export default function Settings() {
                 <h4 className="text-lg font-semibold text-green-900">Configurazione Salvata</h4>
               </div>
               <div className="text-sm text-green-800">
-                <p><strong>GitHub Username:</strong> {config.github_username}</p>
-                <p><strong>Ultimo aggiornamento:</strong> {config.updated_at ? new Date(config.updated_at).toLocaleString('it-IT') : 'N/A'}</p>
+                <p><strong>GitHub Username:</strong> {config.github_username || config.githubUsername}</p>
+                <p><strong>Ultimo aggiornamento:</strong> {config.updated_at ? new Date(config.updated_at).toLocaleString('it-IT') : (config.updatedAt ? new Date(config.updatedAt).toLocaleString('it-IT') : 'N/A')}</p>
               </div>
             </div>
           )}
