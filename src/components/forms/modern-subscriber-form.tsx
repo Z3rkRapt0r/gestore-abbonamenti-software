@@ -5,7 +5,8 @@ import { CreateSubscriberData } from '@/types';
 import { validateEmail, validateRequired } from '@/utils';
 
 interface ModernSubscriberFormProps {
-  onSubmit: (data: CreateSubscriberData) => Promise<void>;
+  // Accetta il payload camelCase inviato all'API semplificata
+  onSubmit: (data: unknown) => Promise<void>;
   loading?: boolean;
   onCancel?: () => void;
 }
