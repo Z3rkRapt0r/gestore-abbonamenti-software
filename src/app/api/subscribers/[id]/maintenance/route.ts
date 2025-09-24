@@ -3,11 +3,11 @@ import { requireAuth } from "@/lib/auth-server";
 import { db } from "@/lib/database";
 
 // PUT /api/subscribers/[id]/maintenance - Imposta maintenance true/false via Edge Config del cliente
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     await requireAuth();
 
-    const { id } = params;
+    const { id } = await context.params;
     const body = await request.json().catch(() => ({}));
     const desired = body?.maintenance === true; // true per bloccare, false per riattivare
 
