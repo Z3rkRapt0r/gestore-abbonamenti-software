@@ -137,12 +137,18 @@ export const db = {
   async updateSubscriber(id: string, updates: Partial<Subscriber>): Promise<Subscriber | null> {
     const { data, error } = await supabaseAdmin
       .from('subscribers')
-      .update(updates)
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
       .select()
       .single()
     
-    if (error) return null
+    if (error) {
+      console.error('Errore aggiornamento subscriber:', error)
+      return null
+    }
     return data
   },
 
@@ -178,25 +184,6 @@ export const db = {
       .single()
     
     if (error) return null
-    return data
-  },
-
-  // Update subscriber
-  async updateSubscriber(id: string, updates: Partial<Subscriber>): Promise<Subscriber | null> {
-    const { data, error } = await supabaseAdmin
-      .from('subscribers')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single()
-    
-    if (error) {
-      console.error('Errore aggiornamento subscriber:', error)
-      return null
-    }
     return data
   },
 
