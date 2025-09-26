@@ -6,26 +6,44 @@ import { stripe } from "@/lib/stripe";
 // POST /api/stripe/create-checkout - Crea checkout session per nuovo abbonato
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔍 Checkout endpoint chiamato');
+    
     // await requireAuth(); // Temporaneamente disabilitato per debug
 
     if (!stripe) {
+      console.log('❌ Stripe non configurato');
       return NextResponse.json({ error: "Stripe non configurato" }, { status: 500 });
     }
 
+    console.log('✅ Stripe configurato');
+
     const body = await request.json();
+    console.log('📋 Body ricevuto:', body);
+    
     const { subscriberId, successUrl, cancelUrl } = body;
 
     if (!subscriberId) {
+      console.log('❌ ID abbonato mancante');
       return NextResponse.json({ error: "ID abbonato richiesto" }, { status: 400 });
     }
+
+    console.log('🔍 Cercando subscriber:', subscriberId);
 
     // Recupera i dati del subscriber
     const subscriber = await db.getSubscriberById(subscriberId);
     if (!subscriber) {
+      console.log('❌ Subscriber non trovato:', subscriberId);
       return NextResponse.json({ error: "Abbonato non trovato" }, { status: 404 });
     }
 
+    console.log('✅ Subscriber trovato:', {
+      id: subscriber.id,
+      email: subscriber.email,
+      price: subscriber.subscription_price
+    });
+
     if (!subscriber.subscription_price) {
+      console.log('❌ Prezzo abbonamento non configurato');
       return NextResponse.json({ error: "Prezzo abbonamento non configurato" }, { status: 400 });
     }
 
@@ -89,9 +107,11 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: unknown) {
-    console.error("Errore nella creazione checkout session:", error);
+    console.error("❌ Errore nella creazione checkout session:", error);
     return NextResponse.json({ 
-      error: "Errore interno del server" 
+      error: "Errore interno del server",
+      details: error instanceof Error ? error.message : String(error),
+      timestamp: new Date().toISOString()
     }, { status: 500 });
   }
 }
