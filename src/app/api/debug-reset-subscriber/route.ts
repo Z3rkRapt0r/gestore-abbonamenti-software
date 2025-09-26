@@ -16,6 +16,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "ID subscriber richiesto" }, { status: 400 });
     }
 
+    console.log('🔄 Reset subscriber:', subscriberId);
+
     // Reset subscriber a PENDING
     const { data, error } = await supabase
       .from('subscribers')
@@ -33,16 +35,27 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('❌ Errore Supabase:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ 
+        error: error.message,
+        details: error,
+        timestamp: new Date().toISOString()
+      }, { status: 500 });
     }
+
+    console.log('✅ Subscriber resettato:', data);
 
     return NextResponse.json({
       success: true,
       message: `Subscriber ${subscriberId} resettato a PENDING`,
-      subscriber: data
+      subscriber: data,
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
     console.error("Errore nel reset subscriber:", error);
-    return NextResponse.json({ error: "Errore interno del server" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Errore interno del server",
+      details: error instanceof Error ? error.message : String(error),
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
   }
 }
