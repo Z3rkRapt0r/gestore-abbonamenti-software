@@ -170,8 +170,10 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
         subscriptionStatus: subscriptionStatus,
       };
 
-      // Usa l'endpoint Edge per la creazione
-      const response = await fetch('/api/edge-create-subscriber', {
+      // Debug: usa endpoint debug per testare
+      console.log('🔍 Payload che verrà inviato:', payload);
+      
+      const response = await fetch('/api/debug-edge-create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
