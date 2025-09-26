@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
 import { db } from "@/lib/database";
+import { Resend } from 'resend';
 
 // POST /api/email/send-payment-link - Invia email con link pagamento
 export async function POST(request: NextRequest) {
@@ -22,23 +23,40 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Abbonato non trovato" }, { status: 404 });
     }
 
-    // Per ora, simuliamo l'invio email
-    // In produzione, integra con un servizio email (SendGrid, Resend, etc.)
-    const emailContent = generatePaymentEmail(subscriber, checkoutUrl);
+    // Inizializza Resend
+    const resend = new Resend(process.env.RESEND_API_KEY);
     
-    console.log("=== EMAIL DA INVIARE ===");
-    console.log(`A: ${subscriber.email}`);
-    console.log(`Oggetto: Completare il pagamento per ${subscriber.project_name}`);
-    console.log("Contenuto:");
-    console.log(emailContent);
-    console.log("========================");
+    if (!process.env.RESEND_API_KEY) {
+      console.log("⚠️ RESEND_API_KEY non configurata, simulando invio email");
+      const emailContent = generatePaymentEmail(subscriber, checkoutUrl);
+      console.log("=== EMAIL DA INVIARE (SIMULATA) ===");
+      console.log(`A: ${subscriber.email}`);
+      console.log(`Oggetto: Completare il pagamento per ${subscriber.project_name}`);
+      console.log("Contenuto:");
+      console.log(emailContent);
+      console.log("====================================");
+    } else {
+      // Invio email reale con Resend
+      console.log("📧 Invio email reale con Resend...");
+      const emailContent = generatePaymentEmail(subscriber, checkoutUrl);
+      
+      const { data, error } = await resend.emails.send({
+        from: 'noreply@gestore-abbonamenti.com', // Sostituisci con il tuo dominio verificato
+        to: [subscriber.email],
+        subject: `Completare il pagamento per ${subscriber.project_name}`,
+        html: emailContent,
+      });
 
-    // TODO: Implementare invio email reale
-    // await sendEmail({
-    //   to: subscriber.email,
-    //   subject: `Completare il pagamento per ${subscriber.project_name}`,
-    //   html: emailContent,
-    // });
+      if (error) {
+        console.error("❌ Errore Resend:", error);
+        return NextResponse.json({ 
+          error: "Errore nell'invio email",
+          details: error 
+        }, { status: 500 });
+      }
+
+      console.log("✅ Email inviata con successo:", data);
+    }
 
     return NextResponse.json({
       success: true,
