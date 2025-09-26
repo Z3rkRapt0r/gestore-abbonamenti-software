@@ -107,7 +107,9 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   }
 
   // Calcola la prossima data di fatturazione
-  const nextBillingDate = new Date(subscription.current_period_end * 1000).toISOString();
+  const nextBillingDate = subscription.current_period_end 
+    ? new Date(subscription.current_period_end * 1000).toISOString()
+    : new Date().toISOString();
 
   await db.updateSubscriber(subscriberId, {
     stripe_subscription_id: subscription.id,
@@ -134,7 +136,9 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
   }
 
   // Calcola la prossima data di fatturazione
-  const nextBillingDate = new Date(subscription.current_period_end * 1000).toISOString();
+  const nextBillingDate = subscription.current_period_end 
+    ? new Date(subscription.current_period_end * 1000).toISOString()
+    : new Date().toISOString();
 
   let status: 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'PAUSED' = 'ACTIVE';
   
@@ -198,7 +202,9 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 
   // Aggiorna la data dell'ultimo pagamento
   const lastPaymentDate = new Date().toISOString();
-  const nextBillingDate = new Date(subscription.current_period_end * 1000).toISOString();
+  const nextBillingDate = subscription.current_period_end 
+    ? new Date(subscription.current_period_end * 1000).toISOString()
+    : new Date().toISOString();
 
   await db.updateSubscriber(subscriberId, {
     last_payment_date: lastPaymentDate,
