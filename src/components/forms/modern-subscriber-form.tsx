@@ -50,6 +50,52 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
     }
   };
 
+  const validateCurrentStep = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (currentStep === 1) {
+      // Validazione Step 1: Dati Personali
+      if (!validateRequired(formData.first_name)) {
+        newErrors.first_name = 'Il nome è obbligatorio';
+      }
+
+      if (!validateRequired(formData.last_name)) {
+        newErrors.last_name = 'Il cognome è obbligatorio';
+      }
+
+      if (!validateRequired(formData.email)) {
+        newErrors.email = 'L\'email è obbligatoria';
+      } else if (!validateEmail(formData.email)) {
+        newErrors.email = 'L\'email non è valida';
+      }
+
+      if (!validateRequired(formData.project_name)) {
+        newErrors.project_name = 'Il nome del progetto è obbligatorio';
+      }
+    } else if (currentStep === 2) {
+      // Validazione Step 2: Configurazione
+      if (!validateRequired(formData.github_repo_template)) {
+        newErrors.github_repo_template = 'Il template GitHub è obbligatorio';
+      }
+
+      if (!validateRequired(formData.vercel_token)) {
+        newErrors.vercel_token = 'Il token Vercel è obbligatorio';
+      }
+
+      if (!validateRequired(formData.vercel_team_id)) {
+        newErrors.vercel_team_id = 'Il Team ID Vercel è obbligatorio';
+      }
+
+      if (formData.subscription_price <= 0) {
+        newErrors.subscription_price = 'Il prezzo deve essere maggiore di 0';
+      }
+    }
+    // Step 3 non ha validazioni obbligatorie
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -90,6 +136,16 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Se non siamo all'ultimo step, vai al prossimo
+    if (currentStep < totalSteps) {
+      if (!validateCurrentStep()) {
+        return;
+      }
+      nextStep();
+      return;
+    }
+    
+    // Se siamo all'ultimo step, valida tutto e invia
     if (!validateForm()) {
       return;
     }
@@ -500,32 +556,26 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
           </div>
 
           <div className="flex space-x-3">
-            {currentStep < totalSteps ? (
-              <button
-                type="button"
-                onClick={nextStep}
-                className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                Avanti →
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Creazione...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>✨ Crea Abbonato</span>
-                  </>
-                )}
-              </button>
-            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Creazione...</span>
+                </>
+              ) : currentStep < totalSteps ? (
+                <>
+                  <span>Avanti →</span>
+                </>
+              ) : (
+                <>
+                  <span>✨ Crea Abbonato</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       </form>
