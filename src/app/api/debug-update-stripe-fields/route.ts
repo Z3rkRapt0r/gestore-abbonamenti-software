@@ -87,8 +87,8 @@ export async function POST(request: NextRequest) {
     const updatedSubscriber = await db.updateSubscriber(subscriberId, {
       subscription_status: subscription.status === 'active' ? 'ACTIVE' : 'PENDING',
       is_active: subscription.status === 'active',
-      next_billing_date: nextBillingDate,
-      last_payment_date: lastPaymentDate
+      next_billing_date: nextBillingDate || undefined,
+      last_payment_date: lastPaymentDate || undefined
     });
 
     if (!updatedSubscriber) {
