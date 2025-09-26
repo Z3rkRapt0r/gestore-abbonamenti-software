@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Validazione input
-    if (!firstName || !lastName || !email || !projectName || !githubRepoTemplate || !vercelToken || !subscriptionPrice) {
+    if (!firstName || !lastName || !email || !projectName || !githubRepoTemplate || !vercelToken || subscriptionPrice === undefined || subscriptionPrice === null) {
       console.log('❌ Validazione fallita - campi mancanti');
       return NextResponse.json({ 
         error: "Tutti i campi obbligatori devono essere compilati",
@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
           projectName: !!projectName,
           githubRepoTemplate: !!githubRepoTemplate,
           vercelToken: !!vercelToken,
-          subscriptionPrice: !!subscriptionPrice
+          subscriptionPrice: subscriptionPrice,
+          subscriptionPriceType: typeof subscriptionPrice
         }
       }, { status: 400 });
     }

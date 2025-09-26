@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validazione input
-    if (!firstName || !lastName || !email || !projectName || !githubRepoTemplate || !vercelToken || !subscriptionPrice) {
+    if (!firstName || !lastName || !email || !projectName || !githubRepoTemplate || !vercelToken || subscriptionPrice === undefined || subscriptionPrice === null) {
       return NextResponse.json({ error: "Tutti i campi obbligatori devono essere compilati" }, { status: 400 });
     }
 
