@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
       edgeConfigId,
       edgeKey,
       notes,
+      subscriptionStatus,
     } = body;
 
     // Validazione input
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
     // Genera slug cliente
     const clientSlug = projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-*|-*$/g, '');
 
-    // Crea il subscriber con stato PENDING (in attesa di pagamento)
+    // Crea il subscriber con stato selezionato dall'admin
     const newSubscriber = await db.createSubscriber({
       first_name: firstName,
       last_name: lastName,
@@ -48,8 +49,8 @@ export async function POST(request: NextRequest) {
       edge_config_id: edgeConfigId,
       edge_key: edgeKey || 'maintenance',
       notes,
-      subscription_status: 'PENDING', // In attesa di pagamento
-      is_active: false, // Non attivo fino al pagamento
+      subscription_status: subscriptionStatus || 'PENDING', // Stato selezionato dall'admin
+      is_active: subscriptionStatus === 'ACTIVE', // Attivo solo se stato è ACTIVE
     });
 
     if (!newSubscriber) {
