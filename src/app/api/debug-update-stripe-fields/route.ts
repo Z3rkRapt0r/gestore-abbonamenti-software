@@ -74,11 +74,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Calcola le date
-    // La prossima fatturazione è la fine del periodo corrente + 1 mese
     const currentPeriodEnd = (subscription as any).current_period_end;
-    const nextBillingDate = currentPeriodEnd 
-      ? new Date(currentPeriodEnd * 1000).toISOString()
-      : null;
+    const trialEnd = (subscription as any).trial_end;
+    const created = (subscription as any).created;
+    
+    let nextBillingDate = null;
+    if (currentPeriodEnd) {
+      // Subscription normale con periodo definito
+      nextBillingDate = new Date(currentPeriodEnd * 1000).toISOString();
+    } else if (trialEnd) {
+      // Subscription in trial
+      nextBillingDate = new Date(trialEnd * 1000).toISOString();
+    } else if (created) {
+      // Subscription senza periodo definito, usa created + 1 mese
+      const nextMonth = new Date(created * 1000);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      nextBillingDate = nextMonth.toISOString();
+    }
 
     console.log('📅 Date calcolate:', {
       nextBillingDate,
