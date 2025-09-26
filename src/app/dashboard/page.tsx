@@ -78,6 +78,29 @@ export default function Dashboard() {
     );
   };
 
+  // Funzione per eliminare subscriber
+  const handleSubscriberDelete = async (subscriberId: string) => {
+    try {
+      const response = await fetch(`/api/subscribers/${subscriberId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Rimuovi il subscriber dalla lista
+        setSubscribers(prev => prev.filter(sub => sub.id !== subscriberId));
+        alert('Cliente eliminato con successo');
+      } else {
+        alert(`Errore durante l'eliminazione: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Errore eliminazione subscriber:', error);
+      alert('Errore di connessione durante l\'eliminazione');
+    }
+  };
+
   // Funzione per creare link di pagamento
   const createPaymentLink = async (subscriberId: string) => {
     try {
@@ -482,6 +505,7 @@ export default function Dashboard() {
         isOpen={!!viewingSubscriber}
         onClose={() => setViewingSubscriber(null)}
         subscriber={viewingSubscriber}
+        onDelete={handleSubscriberDelete}
       />
     </div>
   );

@@ -6,12 +6,14 @@ interface SubscriberDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   subscriber: Subscriber | null;
+  onDelete?: (subscriberId: string) => void;
 }
 
 export default function SubscriberDetailsModal({ 
   isOpen, 
   onClose, 
-  subscriber 
+  subscriber,
+  onDelete 
 }: SubscriberDetailsModalProps) {
   if (!isOpen || !subscriber) return null;
 
@@ -254,7 +256,22 @@ export default function SubscriberDetailsModal({
             </div>
           </div>
 
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-between mt-6">
+            <div>
+              {onDelete && (
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Sei sicuro di voler eliminare il cliente "${subscriber.first_name} ${subscriber.last_name}"?\n\nQuesta azione non può essere annullata.`)) {
+                      onDelete(subscriber.id);
+                      onClose();
+                    }
+                  }}
+                  className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  🗑️ Elimina Cliente
+                </button>
+              )}
+            </div>
             <button
               onClick={onClose}
               className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"

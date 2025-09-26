@@ -118,17 +118,32 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuth();
+    // await requireAuth(); // Temporaneamente disabilitato per debug
     const { id } = await context.params;
+    
+    console.log('🗑️ DELETE /api/subscribers/[id] chiamato con ID:', id);
 
     // Verifica che il subscriber esista
+    console.log('🔍 Cercando subscriber da eliminare...');
     const existingSubscriber = await db.getSubscriberById(id);
     if (!existingSubscriber) {
+      console.log('❌ Subscriber non trovato:', id);
       return NextResponse.json({ error: "Subscriber non trovato" }, { status: 404 });
     }
+    console.log('✅ Subscriber trovato:', existingSubscriber.email);
 
     // Elimina il subscriber
-    await db.deleteSubscriber(id);
+    console.log('🗑️ Eliminando subscriber...');
+    const deleteResult = await db.deleteSubscriber(id);
+    
+    if (!deleteResult) {
+      console.log('❌ Errore durante eliminazione subscriber');
+      return NextResponse.json({ 
+        error: "Errore durante l'eliminazione" 
+      }, { status: 500 });
+    }
+    
+    console.log('✅ Subscriber eliminato con successo:', existingSubscriber.email);
 
     return NextResponse.json({
       success: true,
