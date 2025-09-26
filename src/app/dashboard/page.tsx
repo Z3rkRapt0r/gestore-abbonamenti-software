@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/app/providers";
 import { ModernSubscriberForm } from "@/components/forms/modern-subscriber-form";
+import EditSubscriberModal from "@/components/modals/edit-subscriber-modal";
+import SubscriberDetailsModal from "@/components/modals/subscriber-details-modal";
 import { Subscriber } from "@/types";
 
 export default function Dashboard() {
@@ -14,6 +16,8 @@ export default function Dashboard() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [loadingSubscribers, setLoadingSubscribers] = useState(true);
   const [maintenanceLoading, setMaintenanceLoading] = useState<string | null>(null);
+  const [editingSubscriber, setEditingSubscriber] = useState<Subscriber | null>(null);
+  const [viewingSubscriber, setViewingSubscriber] = useState<Subscriber | null>(null);
 
   // Funzione per caricare gli abbonati
   const loadSubscribers = async () => {
@@ -65,6 +69,13 @@ export default function Dashboard() {
     } finally {
       setMaintenanceLoading(null);
     }
+  };
+
+  // Funzione per aggiornare subscriber dopo modifica
+  const handleSubscriberUpdate = (updatedSubscriber: Subscriber) => {
+    setSubscribers(prev => 
+      prev.map(sub => sub.id === updatedSubscriber.id ? updatedSubscriber : sub)
+    );
   };
 
   // Funzione per creare link di pagamento
@@ -378,10 +389,16 @@ export default function Dashboard() {
                 )}
                       
                       <div className="mt-4 flex gap-2">
-                        <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs hover:bg-blue-200 transition-colors">
+                        <button 
+                          onClick={() => setEditingSubscriber(subscriber)}
+                          className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs hover:bg-blue-200 transition-colors"
+                        >
                           Modifica
                         </button>
-                        <button className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-gray-200 transition-colors">
+                        <button 
+                          onClick={() => setViewingSubscriber(subscriber)}
+                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-gray-200 transition-colors"
+                        >
                           Dettagli
                         </button>
                       </div>
@@ -452,6 +469,20 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Modali */}
+      <EditSubscriberModal
+        isOpen={!!editingSubscriber}
+        onClose={() => setEditingSubscriber(null)}
+        subscriber={editingSubscriber}
+        onUpdate={handleSubscriberUpdate}
+      />
+
+      <SubscriberDetailsModal
+        isOpen={!!viewingSubscriber}
+        onClose={() => setViewingSubscriber(null)}
+        subscriber={viewingSubscriber}
+      />
     </div>
   );
 }
