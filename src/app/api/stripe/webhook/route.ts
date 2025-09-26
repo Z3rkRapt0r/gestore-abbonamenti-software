@@ -184,9 +184,9 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-  if (!invoice.subscription) return;
+  if (!(invoice as any).subscription) return;
 
-  const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+  const subscription = await stripe.subscriptions.retrieve((invoice as any).subscription as string);
   const subscriberId = subscription.metadata?.subscriber_id;
   
   if (!subscriberId) {
@@ -216,20 +216,20 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   // Registra il pagamento nella tabella payments
   await db.createPayment({
     subscriber_id: subscriberId,
-    stripe_payment_intent_id: invoice.payment_intent as string,
-    amount: invoice.amount_paid / 100, // Converti da centesimi
+    stripe_payment_intent_id: (invoice as any).payment_intent as string,
+    amount: (invoice as any).amount_paid / 100, // Converti da centesimi
     currency: invoice.currency,
     status: 'succeeded',
     paid_at: lastPaymentDate,
   });
 
-  console.log(`Payment succeeded for subscriber: ${subscriberId}, amount: ${invoice.amount_paid / 100} ${invoice.currency}`);
+  console.log(`Payment succeeded for subscriber: ${subscriberId}, amount: ${(invoice as any).amount_paid / 100} ${invoice.currency}`);
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  if (!invoice.subscription) return;
+  if (!(invoice as any).subscription) return;
 
-  const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+  const subscription = await stripe.subscriptions.retrieve((invoice as any).subscription as string);
   const subscriberId = subscription.metadata?.subscriber_id;
   
   if (!subscriberId) {
@@ -245,8 +245,8 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   // Registra il pagamento fallito nella tabella payments
   await db.createPayment({
     subscriber_id: subscriberId,
-    stripe_payment_intent_id: invoice.payment_intent as string,
-    amount: invoice.amount_due / 100, // Converti da centesimi
+    stripe_payment_intent_id: (invoice as any).payment_intent as string,
+    amount: (invoice as any).amount_due / 100, // Converti da centesimi
     currency: invoice.currency,
     status: 'failed',
     failure_reason: 'Payment failed',
