@@ -55,21 +55,39 @@ export async function POST(request: NextRequest) {
     console.log('🔍 Recuperando ultimo pagamento...');
     const invoices = await stripe.invoices.list({
       subscription: subscription.id,
-      limit: 1
+      limit: 5
     });
 
     let lastPaymentDate = null;
     if (invoices.data.length > 0) {
-      const lastInvoice = invoices.data[0];
-      console.log('✅ Ultima fattura:', {
-        id: lastInvoice.id,
-        status: lastInvoice.status,
-        paid_at: (lastInvoice as any).paid_at,
-        amount_paid: (lastInvoice as any).amount_paid
-      });
+      // Cerca la prima fattura pagata
+      const paidInvoice = invoices.data.find(invoice => 
+        invoice.status === 'paid' && (invoice as any).paid_at
+      );
       
-      if ((lastInvoice as any).paid_at) {
-        lastPaymentDate = new Date((lastInvoice as any).paid_at * 1000).toISOString();
+      if (paidInvoice) {
+        console.log('✅ Ultima fattura pagata:', {
+          id: paidInvoice.id,
+          status: paidInvoice.status,
+          paid_at: (paidInvoice as any).paid_at,
+          amount_paid: (paidInvoice as any).amount_paid
+        });
+        
+        lastPaymentDate = new Date((paidInvoice as any).paid_at * 1000).toISOString();
+      } else {
+        // Se non trova fatture pagate, usa la data di creazione della subscription
+        console.log('🔍 Nessuna fattura pagata trovata, uso data creazione subscription');
+        const created = (subscription as any).created;
+        if (created) {
+          lastPaymentDate = new Date(created * 1000).toISOString();
+        }
+      }
+    } else {
+      // Se non ci sono fatture, usa la data di creazione della subscription
+      console.log('🔍 Nessuna fattura trovata, uso data creazione subscription');
+      const created = (subscription as any).created;
+      if (created) {
+        lastPaymentDate = new Date(created * 1000).toISOString();
       }
     }
 
