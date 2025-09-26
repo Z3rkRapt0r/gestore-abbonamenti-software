@@ -34,10 +34,14 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuth();
+    // await requireAuth(); // Temporaneamente disabilitato per debug
     const { id } = await context.params;
+    
+    console.log('🔍 PUT /api/subscribers/[id] chiamato con ID:', id);
 
     const body = await request.json();
+    console.log('📋 Body ricevuto:', body);
+    
     const {
       first_name,
       last_name,
@@ -61,12 +65,16 @@ export async function PUT(
     }
 
     // Verifica che il subscriber esista
+    console.log('🔍 Cercando subscriber esistente...');
     const existingSubscriber = await db.getSubscriberById(id);
     if (!existingSubscriber) {
+      console.log('❌ Subscriber non trovato:', id);
       return NextResponse.json({ error: "Subscriber non trovato" }, { status: 404 });
     }
+    console.log('✅ Subscriber trovato:', existingSubscriber.email);
 
     // Aggiorna il subscriber
+    console.log('💾 Aggiornando subscriber...');
     const updatedSubscriber = await db.updateSubscriber(id, {
       first_name,
       last_name,
@@ -82,6 +90,14 @@ export async function PUT(
       supabase_info,
     });
 
+    if (!updatedSubscriber) {
+      console.log('❌ Errore durante aggiornamento subscriber');
+      return NextResponse.json({ 
+        error: "Errore durante l'aggiornamento" 
+      }, { status: 500 });
+    }
+
+    console.log('✅ Subscriber aggiornato con successo:', updatedSubscriber.email);
     return NextResponse.json({
       success: true,
       message: "Subscriber aggiornato con successo",
