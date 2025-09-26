@@ -55,21 +55,50 @@ export async function POST(request: NextRequest) {
     console.log('🔍 Recuperando ultimo pagamento...');
     const invoices = await stripe.invoices.list({
       subscription: subscription.id,
-      limit: 1
+      limit: 10, // Aumenta il limite per trovare una fattura pagata
+      status: 'paid' // Cerca solo fatture pagate
     });
 
     let lastPaymentDate = null;
     if (invoices.data.length > 0) {
-      const lastInvoice = invoices.data[0];
-      console.log('✅ Ultima fattura:', {
-        id: lastInvoice.id,
-        status: lastInvoice.status,
-        paid_at: (lastInvoice as any).paid_at,
-        amount_paid: (lastInvoice as any).amount_paid
+      // Prendi la fattura più recente pagata
+      const lastPaidInvoice = invoices.data[0];
+      console.log('✅ Ultima fattura pagata:', {
+        id: lastPaidInvoice.id,
+        status: lastPaidInvoice.status,
+        paid_at: (lastPaidInvoice as any).paid_at,
+        amount_paid: (lastPaidInvoice as any).amount_paid,
+        created: (lastPaidInvoice as any).created
       });
       
-      if ((lastInvoice as any).paid_at) {
-        lastPaymentDate = new Date((lastInvoice as any).paid_at * 1000).toISOString();
+      if ((lastPaidInvoice as any).paid_at) {
+        lastPaymentDate = new Date((lastPaidInvoice as any).paid_at * 1000).toISOString();
+      } else if ((lastPaidInvoice as any).created) {
+        // Se non c'è paid_at, usa created come fallback
+        lastPaymentDate = new Date((lastPaidInvoice as any).created * 1000).toISOString();
+      }
+    } else {
+      // Se non trova fatture pagate, cerca tutte le fatture
+      console.log('🔍 Nessuna fattura pagata trovata, cercando tutte le fatture...');
+      const allInvoices = await stripe.invoices.list({
+        subscription: subscription.id,
+        limit: 5
+      });
+      
+      if (allInvoices.data.length > 0) {
+        const lastInvoice = allInvoices.data[0];
+        console.log('✅ Ultima fattura (tutte):', {
+          id: lastInvoice.id,
+          status: lastInvoice.status,
+          paid_at: (lastInvoice as any).paid_at,
+          created: (lastInvoice as any).created
+        });
+        
+        if ((lastInvoice as any).paid_at) {
+          lastPaymentDate = new Date((lastInvoice as any).paid_at * 1000).toISOString();
+        } else if ((lastInvoice as any).created) {
+          lastPaymentDate = new Date((lastInvoice as any).created * 1000).toISOString();
+        }
       }
     }
 
