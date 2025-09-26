@@ -40,22 +40,30 @@ export async function POST(request: NextRequest) {
       console.log("📧 Invio email reale con Resend...");
       const emailContent = generatePaymentEmail(subscriber, checkoutUrl);
       
-      const { data, error } = await resend.emails.send({
-        from: 'noreply@gestore-abbonamenti.com', // Sostituisci con il tuo dominio verificato
-        to: [subscriber.email],
-        subject: `Completare il pagamento per ${subscriber.project_name}`,
-        html: emailContent,
-      });
+      try {
+        const { data, error } = await resend.emails.send({
+          from: 'onboarding@resend.dev', // Dominio di test Resend
+          to: [subscriber.email],
+          subject: `Completare il pagamento per ${subscriber.project_name}`,
+          html: emailContent,
+        });
 
-      if (error) {
-        console.error("❌ Errore Resend:", error);
+        if (error) {
+          console.error("❌ Errore Resend:", error);
+          return NextResponse.json({ 
+            error: "Errore nell'invio email",
+            details: error 
+          }, { status: 500 });
+        }
+
+        console.log("✅ Email inviata con successo:", data);
+      } catch (resendError) {
+        console.error("❌ Errore durante invio Resend:", resendError);
         return NextResponse.json({ 
           error: "Errore nell'invio email",
-          details: error 
+          details: resendError instanceof Error ? resendError.message : String(resendError)
         }, { status: 500 });
       }
-
-      console.log("✅ Email inviata con successo:", data);
     }
 
     return NextResponse.json({
