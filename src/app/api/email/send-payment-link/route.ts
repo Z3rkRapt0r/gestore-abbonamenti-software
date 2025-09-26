@@ -41,16 +41,11 @@ export async function POST(request: NextRequest) {
       const emailContent = generatePaymentEmail(subscriber, checkoutUrl);
       
       try {
-        // Per test, invia sempre all'email dell'account Resend
-        const testEmail = 'gabrielegiacomobellante@gmail.com';
         const { data, error } = await resend.emails.send({
-          from: 'onboarding@resend.dev', // Dominio di test Resend
-          to: [testEmail], // Email dell'account Resend per test
-          subject: `[TEST] Completare il pagamento per ${subscriber.project_name} - ${subscriber.email}`,
-          html: emailContent.replace(
-            `Ciao <strong>${subscriber.first_name} ${subscriber.last_name}</strong>,`,
-            `Ciao <strong>${subscriber.first_name} ${subscriber.last_name}</strong>,<br><br><strong>⚠️ TEST EMAIL:</strong> Questa email è stata inviata a te per test. L'email originale era destinata a: <strong>${subscriber.email}</strong><br><br>`
-          ),
+          from: 'support-abbonamenti@licenseglobal.it', // Email aziendale
+          to: [subscriber.email], // Destinatario reale
+          subject: `Completare il pagamento per ${subscriber.project_name}`,
+          html: emailContent,
         });
 
         if (error) {
@@ -73,11 +68,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: process.env.RESEND_API_KEY 
-        ? `Email di test inviata a gabrielegiacomobellante@gmail.com (destinatario originale: ${subscriber.email})`
-        : "Email simulata con successo",
-      email: process.env.RESEND_API_KEY ? 'gabrielegiacomobellante@gmail.com' : subscriber.email,
-      original_email: subscriber.email,
+      message: "Email inviata con successo",
+      email: subscriber.email,
+      from: 'support-abbonamenti@licenseglobal.it',
       checkout_url: checkoutUrl,
     });
 
