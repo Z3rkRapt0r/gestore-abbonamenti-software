@@ -8,6 +8,10 @@ export async function POST(request: NextRequest) {
   try {
     await requireAuth();
 
+    if (!stripe) {
+      return NextResponse.json({ error: "Stripe non configurato" }, { status: 500 });
+    }
+
     const body = await request.json();
     const { subscriberId, successUrl, cancelUrl } = body;
 

@@ -1,15 +1,14 @@
 import Stripe from 'stripe';
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('STRIPE_SECRET_KEY is not set');
-}
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  // Use the SDK's default pinned version to satisfy types
-  // or fallback to 'latest' to avoid type mismatch in CI/build
-  // Remove this field to use the SDK default
-  // apiVersion: 'latest',
-});
+// Initialize Stripe only if the secret key is available
+export const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      // Use the SDK's default pinned version to satisfy types
+      // or fallback to 'latest' to avoid type mismatch in CI/build
+      // Remove this field to use the SDK default
+      // apiVersion: 'latest',
+    })
+  : null;
 
 export const stripeConfig = {
   publishableKey: process.env.STRIPE_PUBLISHABLE_KEY!,
