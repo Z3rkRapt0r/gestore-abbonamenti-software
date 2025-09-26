@@ -188,6 +188,11 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
+  if (!stripe) {
+    console.error("Stripe non configurato");
+    return;
+  }
+  
   if (!(invoice as any).subscription) return;
 
   const subscription = await stripe.subscriptions.retrieve((invoice as any).subscription as string);
@@ -231,6 +236,11 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
+  if (!stripe) {
+    console.error("Stripe non configurato");
+    return;
+  }
+  
   if (!(invoice as any).subscription) return;
 
   const subscription = await stripe.subscriptions.retrieve((invoice as any).subscription as string);
