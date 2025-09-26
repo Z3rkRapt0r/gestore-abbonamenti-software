@@ -5,7 +5,7 @@ import { db } from "@/lib/database";
 // POST /api/email/send-payment-link - Invia email con link pagamento
 export async function POST(request: NextRequest) {
   try {
-    await requireAuth();
+    // await requireAuth(); // Temporaneamente disabilitato per debug
 
     const body = await request.json();
     const { subscriberId, checkoutUrl } = body;
