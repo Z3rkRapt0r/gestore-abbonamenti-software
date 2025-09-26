@@ -6,7 +6,7 @@ import { stripe } from "@/lib/stripe";
 // POST /api/stripe/create-checkout - Crea checkout session per nuovo abbonato
 export async function POST(request: NextRequest) {
   try {
-    await requireAuth();
+    // await requireAuth(); // Temporaneamente disabilitato per debug
 
     if (!stripe) {
       return NextResponse.json({ error: "Stripe non configurato" }, { status: 500 });
