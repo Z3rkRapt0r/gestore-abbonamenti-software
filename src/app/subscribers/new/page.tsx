@@ -24,7 +24,7 @@ export default function NewSubscriber() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('/api/simple-subscriber', {
+      const response = await fetch('/api/edge-create-subscriber', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

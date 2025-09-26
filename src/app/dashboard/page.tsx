@@ -173,7 +173,7 @@ export default function Dashboard() {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('/api/simple-subscriber', {
+      const response = await fetch('/api/edge-create-subscriber', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
