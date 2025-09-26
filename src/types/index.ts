@@ -31,7 +31,7 @@ export interface Subscriber {
   edge_key?: string;
   stripe_customer_id?: string;
   stripe_subscription_id?: string;
-  subscription_status: 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'PAUSED';
+  subscription_status: 'PENDING' | 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'PAUSED';
   subscription_price?: number;
   next_billing_date?: string;
   last_payment_date?: string;

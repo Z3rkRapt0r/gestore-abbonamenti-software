@@ -1,8 +1,0 @@
-tree e6a08728d39d8134ddd74ba174d8d75b8bb3df7c
-parent 50f897cd0d29efbc43675ddf60ce4c47a2e5ed3f
-author gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com> 1753084928 +0000
-committer gpt-engineer-app[bot] <159125892+gpt-engineer-app[bot]@users.noreply.github.com> 1753084928 +0000
-
-feat: Add balance validation to admin form
-
-Add balance validation to the manual leave entry form for admins, ensuring that admins cannot assign leave without the employee having configured balances.

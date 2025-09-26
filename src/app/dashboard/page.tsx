@@ -67,6 +67,51 @@ export default function Dashboard() {
     }
   };
 
+  // Funzione per creare link di pagamento
+  const createPaymentLink = async (subscriberId: string) => {
+    try {
+      // Crea checkout session
+      const checkoutResponse = await fetch('/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          subscriberId,
+          successUrl: `${window.location.origin}/dashboard?payment=success`,
+          cancelUrl: `${window.location.origin}/dashboard?payment=cancelled`
+        }),
+      });
+
+      const checkoutResult = await checkoutResponse.json();
+      
+      if (checkoutResult.success) {
+        // Invia email con link pagamento
+        const emailResponse = await fetch('/api/email/send-payment-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            subscriberId,
+            checkoutUrl: checkoutResult.checkout_url
+          }),
+        });
+
+        const emailResult = await emailResponse.json();
+        
+        if (emailResult.success) {
+          alert(`Link di pagamento inviato a ${emailResult.email}`);
+          // Ricarica la lista per aggiornare lo stato
+          await loadSubscribers();
+        } else {
+          alert(`Errore invio email: ${emailResult.error}`);
+        }
+      } else {
+        alert(`Errore creazione checkout: ${checkoutResult.error}`);
+      }
+    } catch (error) {
+      console.error('Errore nella creazione link pagamento:', error);
+      alert('Errore di connessione');
+    }
+  };
+
   useEffect(() => {
     if (loading) return;
     if (!user) router.push("/auth/signin");
@@ -271,33 +316,66 @@ export default function Dashboard() {
                       </div>
                       
                       {/* Toggle Manutenzione */}
-                      {subscriber.edge_config_id && subscriber.vercel_token ? (
-                        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                          <p className="text-xs font-medium text-yellow-800 mb-2">🔧 Manutenzione Vercel</p>
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => toggleMaintenance(subscriber.id, true)}
-                              disabled={maintenanceLoading === subscriber.id}
-                              className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {maintenanceLoading === subscriber.id ? '⏳' : '🚫'} Attiva Manutenzione
-                            </button>
-                            <button
-                              onClick={() => toggleMaintenance(subscriber.id, false)}
-                              disabled={maintenanceLoading === subscriber.id}
-                              className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {maintenanceLoading === subscriber.id ? '⏳' : '✅'} Disattiva Manutenzione
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                          <p className="text-xs text-gray-600">
-                            ⚠️ Edge Config non configurato
-                          </p>
-                        </div>
-                      )}
+                {/* Stato Abbonamento */}
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs font-medium text-blue-800 mb-2">💳 Stato Abbonamento</p>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      subscriber.subscription_status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                      subscriber.subscription_status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                      subscriber.subscription_status === 'PAST_DUE' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {subscriber.subscription_status === 'ACTIVE' ? '✅ Attivo' :
+                       subscriber.subscription_status === 'PENDING' ? '⏳ In Attesa' :
+                       subscriber.subscription_status === 'PAST_DUE' ? '⚠️ Scaduto' :
+                       '❌ Inattivo'}
+                    </span>
+                    {subscriber.subscription_status === 'PENDING' && (
+                      <button
+                        onClick={() => createPaymentLink(subscriber.id)}
+                        className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200 transition-colors"
+                      >
+                        📧 Invia Link Pagamento
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Manutenzione Vercel */}
+                {subscriber.edge_config_id && subscriber.vercel_token && subscriber.subscription_status === 'ACTIVE' ? (
+                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-xs font-medium text-yellow-800 mb-2">🔧 Manutenzione Vercel</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => toggleMaintenance(subscriber.id, true)}
+                        disabled={maintenanceLoading === subscriber.id}
+                        className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {maintenanceLoading === subscriber.id ? '⏳' : '🚫'} Attiva Manutenzione
+                      </button>
+                      <button
+                        onClick={() => toggleMaintenance(subscriber.id, false)}
+                        disabled={maintenanceLoading === subscriber.id}
+                        className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {maintenanceLoading === subscriber.id ? '⏳' : '✅'} Disattiva Manutenzione
+                      </button>
+                    </div>
+                  </div>
+                ) : subscriber.subscription_status !== 'ACTIVE' ? (
+                  <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <p className="text-xs text-gray-600">
+                      ⚠️ Manutenzione disponibile solo per abbonamenti attivi
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <p className="text-xs text-gray-600">
+                      ⚠️ Edge Config non configurato
+                    </p>
+                  </div>
+                )}
                       
                       <div className="mt-4 flex gap-2">
                         <button className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-xs hover:bg-blue-200 transition-colors">

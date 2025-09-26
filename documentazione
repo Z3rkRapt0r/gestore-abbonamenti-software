@@ -1,0 +1,306 @@
+Prompt per Cursor - Piattaforma Gestione Abbonati Software
+Descrizione del Progetto
+Crea una piattaforma web per la gestione di utenti abbonati a software esterni. La piattaforma deve essere completamente configurabile dall'admin e automatizzare la creazione di repository e deployment per ogni cliente.
+Stack Tecnologico Suggerito
+
+Frontend: Next.js 14 con TypeScript e Tailwind CSS
+Backend: Next.js API Routes
+Database: PostgreSQL con Prisma ORM
+Autenticazione: NextAuth.js
+Pagamenti: Stripe API
+Deploy: Vercel
+
+Struttura dell'Applicazione
+1. Sistema di Autenticazione
+
+Login admin con email/password
+Dashboard protetta per admin
+Sistema di sessioni sicuro
+
+2. Configurazione Globale Admin
+Pagina settings per configurare:
+
+GitHub API Token e Username (per tutte le clonazioni nell'account admin)
+Configurazioni che l'admin può modificare quando necessario
+
+3. Gestione Utenti Abbonati
+Dashboard Principale
+
+Lista di tutti gli utenti abbonati
+Stato pagamenti di ogni progetto (ATTIVO/SCADUTO/IN PAUSA)
+Stato progetto Vercel (attivo/in pausa)
+Prossima data di fatturazione
+Azioni rapide per ogni utente (pausa manuale, riattivazione)
+
+Form Creazione Nuovo Abbonato
+Campi richiesti:
+
+Nome e cognome
+Email
+Nome progetto/azienda
+GitHub Repository Template (slug del repository template da clonare)
+
+Esempio: gestore-abbonamenti-software
+Il sistema clona da: https://github.com/{admin-username}/{template-slug}
+Crea nuovo repo: https://github.com/{admin-username}/{template-slug}-{cliente-slug}
+
+
+
+Configurazione Vercel del Cliente:
+
+Vercel API Token (del cliente, per il suo account)
+Vercel Team ID (opzionale, se il cliente ha un team)
+
+Configurazione Pagamenti:
+
+Prezzo sottoscrizione mensile (€/mese)
+Tipo fatturazione (mensile/annuale)
+Data inizio sottoscrizione
+
+Altri dati:
+
+Database Supabase info (campo informativo)
+Parametri personalizzabili (variabili ambiente specifiche del progetto)
+Note aggiuntive
+
+Automazioni alla Creazione
+Quando viene creato un nuovo abbonato, la piattaforma deve:
+
+Creare Customer Stripe con email e dati del cliente
+Creare Sottoscrizione Stripe ricorrente con prezzo specificato
+Utilizzare i token GitHub dell'admin (dalla configurazione globale)
+Generare slug del cliente dal nome progetto/azienda (es: "Mario Rossi" → "mariorossi")
+Clonare il repository template da: https://github.com/{admin-username}/{template-slug}
+Creare nuovo repository dedicato: https://github.com/{admin-username}/{template-slug}-{cliente-slug}
+Configurare il repository con i parametri personalizzati del cliente (customConfig)
+Utilizzare i token Vercel del cliente per creare deployment automatico nel suo account Vercel
+Salvare il Vercel Project ID del cliente nel database (fondamentale per controllo)
+Salvare tutti i dati Stripe (Customer ID, Subscription ID)
+Applicare configurazioni personalizzate dal campo customConfig
+Inviare email di benvenuto con link di pagamento (opzionale)
+
+4. Sistema di Pagamenti (Stripe)
+Gestione Sottoscrizioni
+Per ogni abbonato:
+
+Creazione automatica Customer Stripe alla registrazione
+Sottoscrizione ricorrente (mensile/annuale)
+Webhook Stripe per gestire eventi di pagamento
+Dashboard pagamenti per l'admin
+
+Automazione Controllo Pagamenti
+Logica automatica:
+
+✅ Pagamento ricevuto → Progetto Vercel ATTIVO
+❌ Pagamento fallito/scaduto → Progetto Vercel IN PAUSA
+🔄 Pagamento recuperato → Riattivazione automatica progetto
+
+Stati Pagamento
+
+ACTIVE - Pagamento regolare
+PAST_DUE - Pagamento in ritardo (grace period)
+CANCELED - Sottoscrizione cancellata
+PAUSED - Sospeso manualmente dall'admin
+
+5. Controllo Progetti Vercel
+Per ogni abbonato, l'admin deve poter:
+
+Mettere in pausa il deployment Vercel
+Riattivare il progetto
+Visualizzare analytics di base
+Accedere direttamente all'URL del progetto
+
+5. Database Schema (Prisma)
+prismamodel Admin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+}
+
+model Configuration {
+  id             String   @id @default(cuid())
+  githubToken    String   // Token GitHub dell'admin per tutte le clonazioni
+  githubUsername String   // Username GitHub dell'admin
+  stripeSecretKey String  // Chiave segreta Stripe
+  stripeWebhookSecret String // Webhook secret per verificare eventi
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Subscriber {
+  id              String   @id @default(cuid())
+  firstName       String
+  lastName        String
+  email           String   @unique
+  projectName     String
+  
+  // Configurazione specifica per ogni cliente
+  githubRepoTemplate String  // Slug del repository template (es: "gestore-abbonamenti-software")
+  clientSlug         String  // Slug generato dal nome cliente (es: "mariorossi")
+  vercelToken        String  // Token Vercel del cliente (suo account)
+  vercelTeamId       String? // Team Vercel del cliente (opzionale)
+  supabaseInfo       String? // Info database Supabase (informativo)
+  customConfig       Json?   // Parametri personalizzabili (env vars, etc.)
+  
+  // Sistema pagamenti Stripe
+  stripeCustomerId    String?   // ID Customer Stripe
+  stripeSubscriptionId String?  // ID Sottoscrizione Stripe
+  subscriptionStatus  String    @default("ACTIVE") // ACTIVE, PAST_DUE, CANCELED, PAUSED
+  subscriptionPrice   Decimal?  // Prezzo mensile sottoscrizione
+  nextBillingDate    DateTime? // Data prossimo pagamento
+  lastPaymentDate    DateTime? // Data ultimo pagamento ricevuto
+  
+  // Dati generati automaticamente
+  githubRepoUrl   String?  // URL del repo clonato: {admin-username}/{template-slug}-{client-slug}
+  vercelProjectId String?  // ID progetto Vercel nel account del cliente
+  vercelUrl       String?  // URL del progetto deployato nell'account cliente
+  isActive        Boolean  @default(true) // Stato progetto (collegato ai pagamenti)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  notes           String?
+  
+  // Relazioni
+  payments Payment[]
+}
+
+model Payment {
+  id            String   @id @default(cuid())
+  subscriberId  String
+  subscriber    Subscriber @relation(fields: [subscriberId], references: [id], onDelete: Cascade)
+  
+  stripePaymentIntentId String  @unique
+  amount        Decimal  // Importo pagato
+  currency      String   // Valuta (EUR, USD, etc.)
+  status        String   // succeeded, failed, pending
+  paidAt        DateTime? // Data pagamento effettivo
+  failureReason String?  // Motivo fallimento (se applicabile)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+Funzionalità Tecniche Richieste
+API Routes da Implementare
+
+POST /api/subscribers - Crea nuovo abbonato + automazioni (cloning, deployment, Stripe)
+PUT /api/subscribers/[id]/toggle - Pausa/riattiva progetto Vercel del cliente specifico
+GET /api/vercel/projects/[vercelProjectId] - Info progetto Vercel del cliente
+POST /api/github/clone - Clona repository template e crea nuovo repo dedicato
+PUT /api/configuration - Salva configurazione globale admin
+GET /api/configuration - Recupera configurazione admin
+POST /api/utils/generate-slug - Genera slug da nome cliente
+
+API Stripe & Pagamenti:
+
+POST /api/stripe/webhooks - Gestisce eventi Stripe (pagamenti ricevuti/falliti)
+POST /api/stripe/create-subscription - Crea nuova sottoscrizione per cliente
+PUT /api/stripe/cancel-subscription/[id] - Cancella sottoscrizione
+GET /api/payments/[subscriberId] - Storia pagamenti cliente
+POST /api/payments/check-status - Controlla stato pagamenti e aggiorna progetti Vercel
+
+Integrazioni API Esterne
+
+GitHub API:
+
+Utilizzare sempre i token dell'admin (dalla configurazione globale)
+Clonare repository template da: https://github.com/{admin-username}/{template-slug}
+Creare nuovo repository privato: https://github.com/{admin-username}/{template-slug}-{client-slug}
+Configurare webhook (se necessario)
+
+
+Vercel API:
+
+Utilizzare i token Vercel specifici di ogni cliente per creare deployment nel suo account
+Creare nuovo progetto dal repository GitHub clonato
+Salvare il Vercel Project ID del cliente per controllo futuro
+Controllare stato deployment tramite Project ID nell'account del cliente
+Mettere in pausa/riattivare progetti specifici tramite Project ID usando i token del cliente
+Recuperare URL progetto del cliente dal suo account Vercel
+
+
+Stripe API:
+
+Creare Customer per ogni cliente
+Gestire sottoscrizioni ricorrenti (mensili/annuali)
+Processare pagamenti e gestire fallimenti
+Webhook automatici per aggiornamenti stato pagamenti
+Cancellazione/riattivazione sottoscrizioni
+
+
+
+Sicurezza
+
+Crypta tutti i token API nel database
+Valida tutti gli input utente
+Rate limiting sulle API
+Log delle operazioni critiche
+
+UI/UX Requirements
+
+Design pulito e moderno con Tailwind CSS
+Dashboard responsive per desktop e mobile
+Notifiche toast per feedback operazioni
+Loading states durante operazioni asincrone
+Tabelle con sorting e ricerca
+Modal per confermare azioni critiche (pausa/cancellazione)
+
+Flusso Principale
+
+Admin configura una volta i suoi token GitHub e Stripe nella pagina settings
+Admin crea nuovo abbonato inserendo:
+
+Dati del cliente
+Repository template da clonare
+Token Vercel del cliente (per deployment nel suo account)
+Prezzo e tipo sottoscrizione
+
+
+Sistema automaticamente:
+
+Crea Customer e Sottoscrizione Stripe
+Clona repository nell'account admin
+Crea deployment nell'account Vercel del cliente
+
+
+Controllo automatico pagamenti:
+
+✅ Pagamento OK → Progetto Vercel ATTIVO
+❌ Pagamento KO → Progetto Vercel IN PAUSA
+
+
+Admin può monitorare tutto dalla dashboard (pagamenti + progetti)
+Sistema completamente automatizzato per gestione pagamenti e progetti
+
+File di Configurazione
+Crea un file .env.local template con tutte le variabili necessarie:
+NEXTAUTH_SECRET=
+NEXTAUTH_URL=
+DATABASE_URL=
+STRIPE_SECRET_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PUBLISHABLE_KEY=
+# I token GitHub e Vercel verranno salvati nel database tramite UI
+Logica Automazione Pagamenti
+Webhook Stripe - Eventi Chiave
+javascript// Esempi di eventi da gestire
+const stripeEvents = {
+  'invoice.payment_succeeded': 'Pagamento ricevuto → Attiva progetto Vercel',
+  'invoice.payment_failed': 'Pagamento fallito → Pausa progetto Vercel', 
+  'customer.subscription.deleted': 'Sottoscrizione cancellata → Pausa definitiva',
+  'invoice.upcoming': 'Invio promemoria pagamento (opzionale)'
+}
+Controllo Automatico
+
+Job schedulato giornaliero che verifica tutti i pagamenti scaduti
+Mette in pausa automaticamente progetti con pagamenti > 7 giorni di ritardo
+Riattiva automaticamente progetti quando il pagamento viene recuperato
+
+Note Implementazione
+
+Gestisci gli errori API in modo graceful
+Implementa retry logic per operazioni GitHub/Vercel
+Salva log di tutte le operazioni importanti
+Crea componenti riutilizzabili per form e tabelle
+Implementa validazione sia client che server-side
+
+Inizia implementando l'autenticazione e la struttura base, poi procedi con le integrazioni API.
