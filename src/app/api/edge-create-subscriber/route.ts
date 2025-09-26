@@ -32,32 +32,9 @@ export async function POST(request: NextRequest) {
       subscriptionStatus,
     } = body;
 
-    console.log('🔍 Campi ricevuti:', {
-      firstName: !!firstName,
-      lastName: !!lastName,
-      email: !!email,
-      projectName: !!projectName,
-      githubRepoTemplate: !!githubRepoTemplate,
-      vercelToken: !!vercelToken,
-      subscriptionPrice: !!subscriptionPrice,
-      subscriptionStatus
-    });
-
     // Validazione input
     if (!firstName || !lastName || !email || !projectName || !githubRepoTemplate || !vercelToken || !subscriptionPrice) {
-      console.log('❌ Validazione fallita - campi mancanti');
-      return NextResponse.json({ 
-        error: "Tutti i campi obbligatori devono essere compilati",
-        received: {
-          firstName: !!firstName,
-          lastName: !!lastName,
-          email: !!email,
-          projectName: !!projectName,
-          githubRepoTemplate: !!githubRepoTemplate,
-          vercelToken: !!vercelToken,
-          subscriptionPrice: !!subscriptionPrice
-        }
-      }, { status: 400 });
+      return NextResponse.json({ error: "Tutti i campi obbligatori devono essere compilati" }, { status: 400 });
     }
 
     // Validazione stato abbonamento
