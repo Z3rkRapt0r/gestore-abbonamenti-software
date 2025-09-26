@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db } from "@/lib/database";
+import { createClient } from '@supabase/supabase-js';
 import { stripe } from "@/lib/stripe";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // POST /api/debug-checkout - Debug della creazione checkout session
 export async function POST(request: NextRequest) {
@@ -23,9 +28,17 @@ export async function POST(request: NextRequest) {
     };
 
     // Recupera i dati del subscriber
-    const subscriber = await db.getSubscriberById(subscriberId);
-    if (!subscriber) {
-      return NextResponse.json({ error: "Abbonato non trovato" }, { status: 404 });
+    const { data: subscriber, error: subscriberError } = await supabase
+      .from('subscribers')
+      .select('*')
+      .eq('id', subscriberId)
+      .single();
+
+    if (subscriberError || !subscriber) {
+      return NextResponse.json({ 
+        error: "Abbonato non trovato",
+        details: subscriberError?.message 
+      }, { status: 404 });
     }
 
     console.log('📋 Dati subscriber:', {
