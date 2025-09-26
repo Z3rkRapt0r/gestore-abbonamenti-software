@@ -170,6 +170,22 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
         subscriptionStatus: subscriptionStatus,
       };
 
+      // Debug: prima verifica cosa invia il form
+      console.log('🔍 Payload che verrà inviato:', payload);
+      
+      const debugResponse = await fetch('/api/debug-form-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      
+      const debugResult = await debugResponse.json();
+      console.log('🔍 Risultato debug form:', debugResult);
+      
+      if (!debugResult.isValid) {
+        throw new Error(`Dati form non validi: ${debugResult.validationErrors.join(', ')}`);
+      }
+
       // Usa l'endpoint Edge per la creazione
       const response = await fetch('/api/edge-create-subscriber', {
         method: 'POST',
