@@ -170,6 +170,29 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
         subscriptionStatus: subscriptionStatus,
       };
 
+      // Debug: verifica payload prima dell'invio
+      console.log('🔍 Payload completo:', payload);
+      console.log('🔍 Tipi di dati:', {
+        firstName: typeof payload.firstName,
+        lastName: typeof payload.lastName,
+        email: typeof payload.email,
+        projectName: typeof payload.projectName,
+        githubRepoTemplate: typeof payload.githubRepoTemplate,
+        vercelToken: typeof payload.vercelToken,
+        subscriptionPrice: typeof payload.subscriptionPrice,
+        subscriptionStatus: typeof payload.subscriptionStatus
+      });
+      console.log('🔍 Valori:', {
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        email: payload.email,
+        projectName: payload.projectName,
+        githubRepoTemplate: payload.githubRepoTemplate,
+        vercelToken: payload.vercelToken,
+        subscriptionPrice: payload.subscriptionPrice,
+        subscriptionStatus: payload.subscriptionStatus
+      });
+
       // Usa l'endpoint Edge per la creazione
       const response = await fetch('/api/edge-create-subscriber', {
         method: 'POST',

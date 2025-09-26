@@ -14,6 +14,8 @@ export async function POST(request: NextRequest) {
     
     const body = await request.json();
     console.log('📋 Body ricevuto:', body);
+    console.log('📋 Body keys:', Object.keys(body));
+    console.log('📋 Body values:', Object.values(body));
     
     const {
       firstName,
