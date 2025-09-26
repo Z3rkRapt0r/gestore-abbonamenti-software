@@ -29,7 +29,15 @@ export async function POST(request: NextRequest) {
       current_period_end: (subscription as any).current_period_end,
       created: (subscription as any).created,
       trial_start: (subscription as any).trial_start,
-      trial_end: (subscription as any).trial_end
+      trial_end: (subscription as any).trial_end,
+      cancel_at_period_end: (subscription as any).cancel_at_period_end,
+      canceled_at: (subscription as any).canceled_at,
+      items: (subscription as any).items?.data?.map((item: any) => ({
+        id: item.id,
+        price: item.price?.id,
+        interval: item.price?.recurring?.interval,
+        interval_count: item.price?.recurring?.interval_count
+      }))
     });
 
     // Recupera le fatture
@@ -54,6 +62,9 @@ export async function POST(request: NextRequest) {
     // Calcola le date
     const currentPeriodStart = (subscription as any).current_period_start;
     const currentPeriodEnd = (subscription as any).current_period_end;
+    const trialStart = (subscription as any).trial_start;
+    const trialEnd = (subscription as any).trial_end;
+    const created = (subscription as any).created;
     
     const currentPeriodStartDate = currentPeriodStart 
       ? new Date(currentPeriodStart * 1000).toISOString()
@@ -61,9 +72,30 @@ export async function POST(request: NextRequest) {
     const currentPeriodEndDate = currentPeriodEnd 
       ? new Date(currentPeriodEnd * 1000).toISOString()
       : null;
+    const trialStartDate = trialStart 
+      ? new Date(trialStart * 1000).toISOString()
+      : null;
+    const trialEndDate = trialEnd 
+      ? new Date(trialEnd * 1000).toISOString()
+      : null;
+    const createdDate = created 
+      ? new Date(created * 1000).toISOString()
+      : null;
 
-    // Per subscription mensili, la prossima fatturazione è current_period_end
-    const nextBillingDate = currentPeriodEndDate;
+    // Determina la prossima fatturazione
+    let nextBillingDate = null;
+    if (currentPeriodEnd) {
+      // Subscription normale con periodo definito
+      nextBillingDate = currentPeriodEndDate;
+    } else if (trialEnd) {
+      // Subscription in trial
+      nextBillingDate = trialEndDate;
+    } else if (created) {
+      // Subscription senza periodo definito, usa created + 1 mese
+      const nextMonth = new Date(created * 1000);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      nextBillingDate = nextMonth.toISOString();
+    }
 
     return NextResponse.json({
       success: true,
@@ -75,10 +107,21 @@ export async function POST(request: NextRequest) {
         current_period_end: currentPeriodEnd,
         current_period_start_date: currentPeriodStartDate,
         current_period_end_date: currentPeriodEndDate,
+        trial_start: trialStart,
+        trial_end: trialEnd,
+        trial_start_date: trialStartDate,
+        trial_end_date: trialEndDate,
+        created: created,
+        created_date: createdDate,
         next_billing_date: nextBillingDate,
-        created: (subscription as any).created,
-        trial_start: (subscription as any).trial_start,
-        trial_end: (subscription as any).trial_end
+        cancel_at_period_end: (subscription as any).cancel_at_period_end,
+        canceled_at: (subscription as any).canceled_at,
+        items: (subscription as any).items?.data?.map((item: any) => ({
+          id: item.id,
+          price: item.price?.id,
+          interval: item.price?.recurring?.interval,
+          interval_count: item.price?.recurring?.interval_count
+        }))
       },
       invoices: invoicesData,
       timestamp: new Date().toISOString()
