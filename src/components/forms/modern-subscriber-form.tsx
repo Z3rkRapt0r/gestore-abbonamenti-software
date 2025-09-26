@@ -162,7 +162,7 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
         githubRepoTemplate: formData.github_repo_template,
         vercelToken: formData.vercel_token,
         vercelTeamId: formData.vercel_team_id,
-        subscriptionPrice: formData.subscription_price,
+        subscriptionPrice: Number(formData.subscription_price), // Converti in numero
         supabaseInfo: formData.supabase_info,
         customConfig: formData.custom_config,
         edgeConfigId: edgeConfigId || undefined,

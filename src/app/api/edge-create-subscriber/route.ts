@@ -35,8 +35,15 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validazione input
-    if (!firstName || !lastName || !email || !projectName || !githubRepoTemplate || !vercelToken || subscriptionPrice === undefined || subscriptionPrice === null) {
+    if (!firstName || !lastName || !email || !projectName || !githubRepoTemplate || !vercelToken || subscriptionPrice === undefined || subscriptionPrice === null || subscriptionPrice === '') {
       return NextResponse.json({ error: "Tutti i campi obbligatori devono essere compilati" }, { status: 400 });
+    }
+
+    // Converti subscriptionPrice in numero se è una stringa
+    const numericSubscriptionPrice = typeof subscriptionPrice === 'string' ? parseFloat(subscriptionPrice) : subscriptionPrice;
+    
+    if (isNaN(numericSubscriptionPrice)) {
+      return NextResponse.json({ error: "Il prezzo dell'abbonamento deve essere un numero valido" }, { status: 400 });
     }
 
     // Validazione stato abbonamento
@@ -57,7 +64,7 @@ export async function POST(request: NextRequest) {
       client_slug: clientSlug,
       vercel_token: vercelToken,
       vercel_team_id: vercelTeamId,
-      subscription_price: subscriptionPrice,
+      subscription_price: numericSubscriptionPrice,
       supabase_info: supabaseInfo,
       custom_config: customConfig || {},
       edge_config_id: edgeConfigId,
