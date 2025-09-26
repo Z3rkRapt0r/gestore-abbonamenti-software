@@ -1,158 +1,109 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { db } from "@/lib/database";
 
 // POST /api/debug-create-flow - Debug completo del flusso di creazione
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔍 Debug create flow endpoint chiamato');
+    
     const body = await request.json();
-    const { 
-      firstName, 
-      lastName, 
-      email, 
-      projectName, 
-      subscriptionPrice = 29.99 
+    console.log('📋 Body ricevuto:', body);
+    
+    const {
+      firstName,
+      lastName,
+      email,
+      projectName,
+      subscriptionPrice,
+      subscriptionStatus
     } = body;
-
+    
     if (!firstName || !lastName || !email || !projectName) {
-      return NextResponse.json({ 
-        error: "Dati mancanti",
-        required: ["firstName", "lastName", "email", "projectName"]
-      }, { status: 400 });
+      return NextResponse.json({ error: "Campi obbligatori mancanti" }, { status: 400 });
     }
-
-    console.log('🔍 Debug flusso creazione subscriber:', { firstName, lastName, email, projectName, subscriptionPrice });
-
+    
     // Genera slug cliente
     const clientSlug = projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-*|-*$/g, '');
-
-    // Step 1: Crea subscriber con stato PENDING
-    console.log('📝 Step 1: Creazione subscriber...');
-    const { data: newSubscriber, error: createError } = await supabase
-      .from('subscribers')
-      .insert({
-        first_name: firstName,
-        last_name: lastName,
-        email: email,
-        project_name: projectName,
-        client_slug: clientSlug,
-        subscription_price: subscriptionPrice,
-        subscription_status: 'PENDING',
-        is_active: false,
-        edge_key: 'maintenance',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-
-    if (createError) {
-      console.error('❌ Errore creazione subscriber:', createError);
+    
+    const subscriberData = {
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      project_name: projectName,
+      github_repo_template: 'test/template',
+      client_slug: clientSlug,
+      vercel_token: 'test-token',
+      vercel_team_id: 'test-team',
+      subscription_price: subscriptionPrice || 0,
+      supabase_info: 'test info',
+      custom_config: {},
+      edge_config_id: 'test-config',
+      edge_key: 'maintenance',
+      notes: 'Test subscriber',
+      subscription_status: subscriptionStatus || 'PENDING',
+      is_active: subscriptionStatus === 'ACTIVE',
+    };
+    
+    console.log('💾 Dati che verranno inviati al database:', subscriberData);
+    
+    // Crea il subscriber
+    const newSubscriber = await db.createSubscriber(subscriberData);
+    
+    if (!newSubscriber) {
+      console.log('❌ Errore durante creazione subscriber');
       return NextResponse.json({ 
-        error: "Errore nella creazione subscriber",
-        details: createError.message,
-        code: createError.code
+        error: "Errore durante la creazione",
+        details: "createSubscriber returned null"
       }, { status: 500 });
     }
-
-    console.log('✅ Step 1 completato:', {
+    
+    console.log('✅ Subscriber creato dal database:', {
       id: newSubscriber.id,
-      status: newSubscriber.subscription_status,
-      active: newSubscriber.is_active
+      email: newSubscriber.email,
+      subscription_status: newSubscriber.subscription_status,
+      is_active: newSubscriber.is_active,
+      created_at: newSubscriber.created_at
     });
-
-    // Step 2: Verifica immediata (dopo 100ms)
-    console.log('⏱️ Step 2: Verifica immediata...');
-    await new Promise(resolve => setTimeout(resolve, 100));
     
-    const { data: immediateCheck, error: immediateError } = await supabase
-      .from('subscribers')
-      .select('*')
-      .eq('id', newSubscriber.id)
-      .single();
-
-    console.log('✅ Step 2 completato:', {
-      status: immediateCheck?.subscription_status,
-      active: immediateCheck?.is_active
-    });
-
-    // Step 3: Verifica dopo 1 secondo
-    console.log('⏱️ Step 3: Verifica dopo 1 secondo...');
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Verifica immediatamente dopo la creazione
+    console.log('🔍 Verifica immediata dopo creazione...');
+    const verifySubscriber = await db.getSubscriberById(newSubscriber.id);
     
-    const { data: delayedCheck, error: delayedError } = await supabase
-      .from('subscribers')
-      .select('*')
-      .eq('id', newSubscriber.id)
-      .single();
-
-    console.log('✅ Step 3 completato:', {
-      status: delayedCheck?.subscription_status,
-      active: delayedCheck?.is_active
-    });
-
-    // Step 4: Verifica dopo 3 secondi
-    console.log('⏱️ Step 4: Verifica dopo 3 secondi...');
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    if (verifySubscriber) {
+      console.log('✅ Verifica subscriber:', {
+        id: verifySubscriber.id,
+        subscription_status: verifySubscriber.subscription_status,
+        is_active: verifySubscriber.is_active
+      });
+    }
     
-    const { data: finalCheck, error: finalError } = await supabase
-      .from('subscribers')
-      .select('*')
-      .eq('id', newSubscriber.id)
-      .single();
-
-    console.log('✅ Step 4 completato:', {
-      status: finalCheck?.subscription_status,
-      active: finalCheck?.is_active
-    });
-
     return NextResponse.json({
       success: true,
-      message: "Debug flusso completato",
-      subscriber: newSubscriber,
-      timeline: {
-        created: {
-          status: newSubscriber.subscription_status,
-          active: newSubscriber.is_active,
-          timestamp: new Date().toISOString()
-        },
-        immediate: {
-          status: immediateCheck?.subscription_status,
-          active: immediateCheck?.is_active,
-          timestamp: new Date().toISOString()
-        },
-        delayed: {
-          status: delayedCheck?.subscription_status,
-          active: delayedCheck?.is_active,
-          timestamp: new Date().toISOString()
-        },
-        final: {
-          status: finalCheck?.subscription_status,
-          active: finalCheck?.is_active,
-          timestamp: new Date().toISOString()
-        }
+      message: "Debug creazione completato",
+      input: {
+        subscriptionStatus: subscriptionStatus,
+        expectedIsActive: subscriptionStatus === 'ACTIVE'
       },
-      debug: {
-        status_changed: newSubscriber.subscription_status !== finalCheck?.subscription_status,
-        active_changed: newSubscriber.is_active !== finalCheck?.is_active,
-        changes: {
-          status: newSubscriber.subscription_status !== finalCheck?.subscription_status ? 
-            `${newSubscriber.subscription_status} → ${finalCheck?.subscription_status}` : 'Nessun cambiamento',
-          active: newSubscriber.is_active !== finalCheck?.is_active ? 
-            `${newSubscriber.is_active} → ${finalCheck?.is_active}` : 'Nessun cambiamento'
-        }
-      }
+      created: {
+        id: newSubscriber.id,
+        email: newSubscriber.email,
+        subscription_status: newSubscriber.subscription_status,
+        is_active: newSubscriber.is_active,
+        created_at: newSubscriber.created_at
+      },
+      verified: verifySubscriber ? {
+        subscription_status: verifySubscriber.subscription_status,
+        is_active: verifySubscriber.is_active
+      } : null,
+      timestamp: new Date().toISOString()
     });
-
+    
   } catch (error: unknown) {
-    console.error("Errore nel debug flusso creazione:", error);
+    console.error("❌ Errore nel debug create flow:", error);
     return NextResponse.json({ 
       error: "Errore interno del server",
       details: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
       timestamp: new Date().toISOString()
     }, { status: 500 });
   }
