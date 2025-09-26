@@ -34,9 +34,33 @@ export async function POST(request: NextRequest) {
       subscriptionStatus,
     } = body;
 
-    // Validazione input
+    // Validazione input con debug dettagliato
+    console.log('🔍 Validazione campi:', {
+      firstName: !!firstName,
+      lastName: !!lastName,
+      email: !!email,
+      projectName: !!projectName,
+      githubRepoTemplate: !!githubRepoTemplate,
+      vercelToken: !!vercelToken,
+      subscriptionPrice: subscriptionPrice,
+      subscriptionPriceType: typeof subscriptionPrice
+    });
+
     if (!firstName || !lastName || !email || !projectName || !githubRepoTemplate || !vercelToken || subscriptionPrice === undefined || subscriptionPrice === null || subscriptionPrice === '') {
-      return NextResponse.json({ error: "Tutti i campi obbligatori devono essere compilati" }, { status: 400 });
+      console.log('❌ Validazione fallita - campi mancanti');
+      return NextResponse.json({ 
+        error: "Tutti i campi obbligatori devono essere compilati",
+        debug: {
+          firstName: !!firstName,
+          lastName: !!lastName,
+          email: !!email,
+          projectName: !!projectName,
+          githubRepoTemplate: !!githubRepoTemplate,
+          vercelToken: !!vercelToken,
+          subscriptionPrice: subscriptionPrice,
+          subscriptionPriceType: typeof subscriptionPrice
+        }
+      }, { status: 400 });
     }
 
     // Converti subscriptionPrice in numero se è una stringa
