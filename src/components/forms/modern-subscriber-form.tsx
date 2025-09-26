@@ -193,21 +193,8 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
         subscriptionStatus: payload.subscriptionStatus
       });
 
-      // Usa l'endpoint Edge per la creazione
-      const response = await fetch('/api/edge-create-subscriber', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || 'Errore nella creazione del subscriber');
-      }
-
-      // Chiama la callback per aggiornare la dashboard
-      await onSubmit(result);
+      // Chiama la callback per aggiornare la dashboard (che gestirà la chiamata API)
+      await onSubmit(payload);
       // Reset form on success
       setFormData({
         first_name: '',
