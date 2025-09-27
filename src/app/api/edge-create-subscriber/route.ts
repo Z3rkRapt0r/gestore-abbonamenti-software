@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
       edgeKey,
       notes,
       subscriptionStatus,
+      subscriptionType,
     } = body;
 
     // Validazione input
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest) {
       notes,
       subscription_status: subscriptionStatus || 'PENDING', // Forza PENDING se non specificato
       is_active: subscriptionStatus === 'ACTIVE', // Forza false se non ACTIVE
+      subscription_type: subscriptionType || 'monthly', // Default mensile
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };

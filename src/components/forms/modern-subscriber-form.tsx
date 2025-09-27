@@ -32,6 +32,7 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
   
   // Stato abbonamento (default: PENDING)
   const [subscriptionStatus, setSubscriptionStatus] = useState<'PENDING' | 'ACTIVE'>('PENDING');
+  const [subscriptionType, setSubscriptionType] = useState<'monthly' | 'daily'>('monthly');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currentStep, setCurrentStep] = useState(1);
@@ -168,6 +169,7 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
         edgeConfigId: edgeConfigId || undefined,
         edgeKey: edgeKey || 'maintenance',
         subscriptionStatus: subscriptionStatus,
+        subscriptionType: subscriptionType,
       };
 
 
@@ -190,6 +192,7 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
       setEdgeConfigId("");
       setEdgeKey("maintenance");
       setSubscriptionStatus('PENDING');
+      setSubscriptionType('monthly');
       setCurrentStep(1);
     } catch (error) {
       console.error('Errore durante la creazione dell\'abbonato:', error);
@@ -452,38 +455,71 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Stato Abbonamento
-              </label>
-              <div className="flex space-x-4">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="subscription_status"
-                    value="PENDING"
-                    checked={subscriptionStatus === 'PENDING'}
-                    onChange={(e) => setSubscriptionStatus(e.target.value as 'PENDING' | 'ACTIVE')}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">⏳ In Attesa</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="subscription_status"
-                    value="ACTIVE"
-                    checked={subscriptionStatus === 'ACTIVE'}
-                    onChange={(e) => setSubscriptionStatus(e.target.value as 'PENDING' | 'ACTIVE')}
-                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">✅ Attivo</span>
-                </label>
-              </div>
-              <p className="text-xs text-gray-500">
-                Seleziona "In Attesa" per nuovi clienti che devono ancora pagare, "Attivo" per clienti già paganti.
-              </p>
-            </div>
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700">
+        Stato Abbonamento
+      </label>
+      <div className="flex space-x-4">
+        <label className="flex items-center">
+          <input
+            type="radio"
+            name="subscription_status"
+            value="PENDING"
+            checked={subscriptionStatus === 'PENDING'}
+            onChange={(e) => setSubscriptionStatus(e.target.value as 'PENDING' | 'ACTIVE')}
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+          />
+          <span className="ml-2 text-sm text-gray-700">⏳ In Attesa</span>
+        </label>
+        <label className="flex items-center">
+          <input
+            type="radio"
+            name="subscription_status"
+            value="ACTIVE"
+            checked={subscriptionStatus === 'ACTIVE'}
+            onChange={(e) => setSubscriptionStatus(e.target.value as 'PENDING' | 'ACTIVE')}
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+          />
+          <span className="ml-2 text-sm text-gray-700">✅ Attivo</span>
+        </label>
+      </div>
+      <p className="text-xs text-gray-500">
+        Seleziona "In Attesa" per nuovi clienti che devono ancora pagare, "Attivo" per clienti già paganti.
+      </p>
+    </div>
+
+    <div className="space-y-2">
+      <label className="block text-sm font-medium text-gray-700">
+        Tipo Abbonamento
+      </label>
+      <div className="flex space-x-4">
+        <label className="flex items-center">
+          <input
+            type="radio"
+            name="subscription_type"
+            value="monthly"
+            checked={subscriptionType === 'monthly'}
+            onChange={(e) => setSubscriptionType(e.target.value as 'monthly' | 'daily')}
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+          />
+          <span className="ml-2 text-sm text-gray-700">📅 Mensile</span>
+        </label>
+        <label className="flex items-center">
+          <input
+            type="radio"
+            name="subscription_type"
+            value="daily"
+            checked={subscriptionType === 'daily'}
+            onChange={(e) => setSubscriptionType(e.target.value as 'monthly' | 'daily')}
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+          />
+          <span className="ml-2 text-sm text-gray-700">📆 Giornaliero</span>
+        </label>
+      </div>
+      <p className="text-xs text-gray-500">
+        Seleziona il tipo di abbonamento per il calcolo della prossima fatturazione.
+      </p>
+    </div>
           </div>
         )}
 

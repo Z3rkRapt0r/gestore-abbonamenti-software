@@ -127,24 +127,34 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   
   console.log(`✅ Subscriber found: ${subscriber.email}`);
 
-  // Calcola la prossima data di fatturazione (stessa logica dell'endpoint debug)
-  const currentPeriodEnd = (subscription as any).current_period_end;
-  const trialEnd = (subscription as any).trial_end;
-  const created = (subscription as any).created;
-  
-  let nextBillingDate = null;
-  if (currentPeriodEnd) {
-    // Subscription normale con periodo definito
-    nextBillingDate = new Date(currentPeriodEnd * 1000).toISOString();
-  } else if (trialEnd) {
-    // Subscription in trial
-    nextBillingDate = new Date(trialEnd * 1000).toISOString();
-  } else if (created) {
-    // Subscription senza periodo definito, usa created + 1 mese
-    const nextMonth = new Date(created * 1000);
-    nextMonth.setMonth(nextMonth.getMonth() + 1);
-    nextBillingDate = nextMonth.toISOString();
-  }
+            // Calcola la prossima data di fatturazione (stessa logica dell'endpoint debug)
+            const currentPeriodEnd = (subscription as any).current_period_end;
+            const trialEnd = (subscription as any).trial_end;
+            const created = (subscription as any).created;
+            
+            // Recupera il tipo di abbonamento dal subscriber
+            const subscriberData = await db.getSubscriberById(subscriberId);
+            const subscriptionType = subscriberData?.subscription_type || 'monthly';
+            
+            let nextBillingDate = null;
+            if (currentPeriodEnd) {
+              // Subscription normale con periodo definito
+              nextBillingDate = new Date(currentPeriodEnd * 1000).toISOString();
+            } else if (trialEnd) {
+              // Subscription in trial
+              nextBillingDate = new Date(trialEnd * 1000).toISOString();
+            } else if (created) {
+              // Subscription senza periodo definito, calcola in base al tipo
+              const baseDate = new Date(created * 1000);
+              if (subscriptionType === 'daily') {
+                // Per abbonamenti giornalieri, aggiungi 1 giorno
+                baseDate.setDate(baseDate.getDate() + 1);
+              } else {
+                // Per abbonamenti mensili, aggiungi 1 mese
+                baseDate.setMonth(baseDate.getMonth() + 1);
+              }
+              nextBillingDate = baseDate.toISOString();
+            }
   
   console.log(`📅 Next billing date calculated: ${nextBillingDate}`);
 

@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
             const currentPeriodEnd = (subscription as any).current_period_end;
             const trialEnd = (subscription as any).trial_end;
             const created = (subscription as any).created;
+            const subscriptionType = subscriber.subscription_type || 'monthly';
             
             let nextBillingDate = null;
             if (currentPeriodEnd) {
@@ -80,9 +81,15 @@ export async function POST(request: NextRequest) {
             } else if (trialEnd) {
               nextBillingDate = new Date(trialEnd * 1000).toISOString();
             } else if (created) {
-              const nextMonth = new Date(created * 1000);
-              nextMonth.setMonth(nextMonth.getMonth() + 1);
-              nextBillingDate = nextMonth.toISOString();
+              const baseDate = new Date(created * 1000);
+              if (subscriptionType === 'daily') {
+                // Per abbonamenti giornalieri, aggiungi 1 giorno
+                baseDate.setDate(baseDate.getDate() + 1);
+              } else {
+                // Per abbonamenti mensili, aggiungi 1 mese
+                baseDate.setMonth(baseDate.getMonth() + 1);
+              }
+              nextBillingDate = baseDate.toISOString();
             }
 
             updatedData.next_billing_date = nextBillingDate || undefined;
