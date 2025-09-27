@@ -108,10 +108,20 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   }
 
   console.log(`🔍 Looking for subscriber with ID: ${subscriberId}`);
+  
+  // Debug: verifica tutti i subscriber disponibili
+  const allSubscribers = await db.getSubscribers();
+  console.log(`🔍 Total subscribers in database: ${allSubscribers?.length || 0}`);
+  if (allSubscribers) {
+    allSubscribers.forEach(sub => {
+      console.log(`🔍 Subscriber: ${sub.id} - ${sub.email}`);
+    });
+  }
+  
   const subscriber = await db.getSubscriberById(subscriberId);
   if (!subscriber) {
     console.error(`❌ Subscriber not found: ${subscriberId}`);
-    console.log(`🔍 Available subscribers:`, await db.getSubscribers());
+    console.log(`🔍 Available subscriber IDs:`, allSubscribers?.map(s => s.id) || []);
     return;
   }
   
