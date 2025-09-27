@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from 'react';
-import { CreateSubscriberData } from '@/types';
+import { useState, useEffect } from 'react';
+import { CreateSubscriberData, Software } from '@/types';
 import { validateEmail, validateRequired } from '@/utils';
 
 interface ModernSubscriberFormProps {
@@ -17,7 +17,8 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
     last_name: '',
     email: '',
     project_name: '',
-    github_repo_template: '',
+    software_id: '',
+    client_slug: '',
     vercel_token: '',
     vercel_team_id: '',
     supabase_info: '',
@@ -34,9 +35,39 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
   const [subscriptionStatus, setSubscriptionStatus] = useState<'PENDING' | 'ACTIVE'>('PENDING');
   const [subscriptionType, setSubscriptionType] = useState<'monthly' | 'daily' | 'yearly'>('monthly');
 
+  // Software disponibili
+  const [software, setSoftware] = useState<Software[]>([]);
+  const [loadingSoftware, setLoadingSoftware] = useState(true);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
+
+  // Carica software disponibili
+  useEffect(() => {
+    const loadSoftware = async () => {
+      try {
+        const response = await fetch('/api/software/active');
+        if (response.ok) {
+          const result = await response.json();
+          setSoftware(result.software || []);
+          // Seleziona il primo software di default
+          if (result.software && result.software.length > 0) {
+            setFormData(prev => ({
+              ...prev,
+              software_id: result.software[0].id
+            }));
+          }
+        }
+      } catch (error) {
+        console.error('Errore nel caricamento software:', error);
+      } finally {
+        setLoadingSoftware(false);
+      }
+    };
+
+    loadSoftware();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -76,11 +107,12 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
       if (!validateRequired(formData.project_name)) {
         newErrors.project_name = 'Il nome del progetto è obbligatorio';
       }
+
+      if (!validateRequired(formData.software_id)) {
+        newErrors.software_id = 'Il software è obbligatorio';
+      }
     } else if (currentStep === 2) {
       // Validazione Step 2: Configurazione
-      if (!validateRequired(formData.github_repo_template)) {
-        newErrors.github_repo_template = 'Il template GitHub è obbligatorio';
-      }
 
       if (!validateRequired(formData.vercel_token)) {
         newErrors.vercel_token = 'Il token Vercel è obbligatorio';
@@ -121,8 +153,8 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
       newErrors.project_name = 'Il nome del progetto è obbligatorio';
     }
 
-    if (!validateRequired(formData.github_repo_template)) {
-      newErrors.github_repo_template = 'Il template del repository è obbligatorio';
+    if (!validateRequired(formData.software_id)) {
+      newErrors.software_id = 'Il software è obbligatorio';
     }
 
     if (!validateRequired(formData.vercel_token)) {
@@ -160,7 +192,7 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
         lastName: formData.last_name,
         email: formData.email,
         projectName: formData.project_name,
-        githubRepoTemplate: formData.github_repo_template,
+        softwareId: formData.software_id,
         vercelToken: formData.vercel_token,
         vercelTeamId: formData.vercel_team_id,
         subscriptionPrice: Number(formData.subscription_price), // Converti in numero
@@ -181,7 +213,6 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
         last_name: '',
         email: '',
         project_name: '',
-        github_repo_template: '',
         vercel_token: '',
         vercel_team_id: '',
         supabase_info: '',
@@ -213,7 +244,6 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
       last_name: '',
       email: '',
       project_name: '',
-      github_repo_template: '',
       vercel_token: '',
       vercel_team_id: '',
       supabase_info: '',
@@ -318,6 +348,43 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
             </div>
 
             <div className="space-y-2">
+              <label htmlFor="software_id" className="block text-sm font-medium text-gray-700">
+                Software *
+              </label>
+              {loadingSoftware ? (
+                <div className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-600 mr-2"></div>
+                  Caricamento software...
+                </div>
+              ) : (
+                <select
+                  name="software_id"
+                  id="software_id"
+                  value={formData.software_id}
+                  onChange={handleInputChange}
+                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white/80 backdrop-blur-sm ${
+                    errors.software_id ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                >
+                  <option value="">Seleziona un software</option>
+                  {software.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} {item.description && `- ${item.description}`}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {errors.software_id && (
+                <p className="text-sm text-red-600">{errors.software_id}</p>
+              )}
+              {software.length === 0 && !loadingSoftware && (
+                <p className="text-sm text-amber-600">
+                  ⚠️ Nessun software configurato. Vai alla pagina <a href="/software" className="text-indigo-600 hover:underline">Gestione Software</a> per crearne uno.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
               <label htmlFor="project_name" className="block text-sm font-medium text-gray-700">
                 Nome Progetto/Azienda *
               </label>
@@ -352,25 +419,20 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
               <p className="text-gray-600">Imposta i parametri per GitHub e Vercel</p>
             </div>
 
-            <div className="space-y-2">
-              <label htmlFor="github_repo_template" className="block text-sm font-medium text-gray-700">
-                Template GitHub *
-              </label>
-              <input
-                type="text"
-                name="github_repo_template"
-                id="github_repo_template"
-                value={formData.github_repo_template}
-                onChange={handleInputChange}
-                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white/80 backdrop-blur-sm ${
-                  errors.github_repo_template ? 'border-red-300' : 'border-gray-300'
-                }`}
-                placeholder="gestore-abbonamenti-software"
-              />
-              <p className="text-xs text-gray-500">Slug del repository template da clonare</p>
-              {errors.github_repo_template && (
-                <p className="text-sm text-red-600">{errors.github_repo_template}</p>
-              )}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-blue-800">Template GitHub</h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Il template GitHub viene configurato automaticamente in base al software selezionato.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
