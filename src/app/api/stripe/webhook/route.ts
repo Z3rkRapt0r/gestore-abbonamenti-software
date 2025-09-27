@@ -127,15 +127,40 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   
   console.log(`✅ Subscriber found: ${subscriber.email}`);
 
-  // Calcola la prossima data di fatturazione
-  const nextBillingDate = (subscription as any).current_period_end 
-    ? new Date((subscription as any).current_period_end * 1000).toISOString()
-    : new Date().toISOString();
+  // Calcola la prossima data di fatturazione (stessa logica dell'endpoint debug)
+  const currentPeriodEnd = (subscription as any).current_period_end;
+  const trialEnd = (subscription as any).trial_end;
+  const created = (subscription as any).created;
+  
+  let nextBillingDate = null;
+  if (currentPeriodEnd) {
+    // Subscription normale con periodo definito
+    nextBillingDate = new Date(currentPeriodEnd * 1000).toISOString();
+  } else if (trialEnd) {
+    // Subscription in trial
+    nextBillingDate = new Date(trialEnd * 1000).toISOString();
+  } else if (created) {
+    // Subscription senza periodo definito, usa created + 1 mese
+    const nextMonth = new Date(created * 1000);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    nextBillingDate = nextMonth.toISOString();
+  }
+  
+  console.log(`📅 Next billing date calculated: ${nextBillingDate}`);
+
+  // Calcola l'ultimo pagamento (usa la data di creazione della subscription come fallback)
+  let lastPaymentDate = null;
+  if (created) {
+    lastPaymentDate = new Date(created * 1000).toISOString();
+  }
+  
+  console.log(`📅 Last payment date calculated: ${lastPaymentDate}`);
 
   await db.updateSubscriber(subscriberId, {
     stripe_subscription_id: subscription.id,
     subscription_status: subscription.status === 'active' ? 'ACTIVE' : 'PAST_DUE',
     next_billing_date: nextBillingDate,
+    last_payment_date: lastPaymentDate,
     is_active: subscription.status === 'active',
   });
 
