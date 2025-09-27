@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS software (
   github_repo_template TEXT NOT NULL,
   github_token TEXT NOT NULL,
   payment_template_subject TEXT NOT NULL DEFAULT 'Completa il pagamento per {software_name}',
-  payment_template_body TEXT NOT NULL DEFAULT 'Ciao {first_name},\n\nPer completare l\'abbonamento a {software_name}, clicca sul link qui sotto:\n\n{payment_link}\n\nCordiali saluti,\nIl team di {software_name}',
+  payment_template_body TEXT NOT NULL DEFAULT 'Ciao {first_name},\n\nPer completare l''abbonamento a {software_name}, clicca sul link qui sotto:\n\n{payment_link}\n\nCordiali saluti,\nIl team di {software_name}',
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -28,7 +28,7 @@ VALUES (
   'https://github.com/template-repo',
   'ghp_default_token',
   'Completa il pagamento per {software_name}',
-  'Ciao {first_name},\n\nPer completare l\'abbonamento a {software_name}, clicca sul link qui sotto:\n\n{payment_link}\n\nCordiali saluti,\nIl team di {software_name}'
+  'Ciao {first_name},\n\nPer completare l''abbonamento a {software_name}, clicca sul link qui sotto:\n\n{payment_link}\n\nCordiali saluti,\nIl team di {software_name}'
 );
 
 -- Aggiorna subscribers esistenti con software di default

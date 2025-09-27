@@ -5,13 +5,7 @@ export interface Admin {
   created_at: string;
 }
 
-export interface Configuration {
-  id: string;
-  github_username: string;
-  maintenance_deployment_id?: string;
-  created_at: string;
-  updated_at: string;
-}
+// Configuration interface rimossa - ora gestita tramite software
 
 export interface Software {
   id: string;

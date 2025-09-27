@@ -9,13 +9,7 @@ export interface Admin {
   created_at: string
 }
 
-export interface Configuration {
-  id: string
-  github_username: string
-  maintenance_deployment_id?: string
-  created_at: string
-  updated_at: string
-}
+// Configuration interface rimossa - ora gestita tramite software
 
 export interface Software {
   id: string
@@ -89,27 +83,7 @@ export const db = {
     return data
   },
 
-  // Configuration operations
-  async getConfiguration(): Promise<Configuration | null> {
-    const { data, error } = await supabaseAdmin
-      .from('configurations')
-      .select('*')
-      .single()
-    
-    if (error) return null
-    return data
-  },
-
-  async updateConfiguration(config: Partial<Configuration>): Promise<Configuration | null> {
-    const { data, error } = await supabaseAdmin
-      .from('configurations')
-      .upsert(config)
-      .select()
-      .single()
-    
-    if (error) return null
-    return data
-  },
+  // Configuration operations rimosse - ora gestite tramite software
 
   // Subscriber operations
   async getSubscriberById(id: string): Promise<Subscriber | null> {
