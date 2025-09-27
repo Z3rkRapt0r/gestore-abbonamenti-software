@@ -151,6 +151,11 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   // Recupera l'ultimo pagamento da Stripe
   let lastPaymentDate = null;
   try {
+    if (!stripe) {
+      console.error('❌ Stripe not initialized');
+      throw new Error('Stripe not initialized');
+    }
+    
     console.log(`🔍 Fetching invoices from Stripe for subscription: ${subscription.id}`);
     const invoices = await stripe.invoices.list({
       subscription: subscription.id,
