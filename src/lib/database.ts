@@ -37,6 +37,7 @@ export interface Subscriber {
   stripe_customer_id?: string
   stripe_subscription_id?: string
   subscription_status: string
+  subscription_type?: 'daily' | 'monthly' | 'yearly'
   subscription_price?: number
   next_billing_date?: string
   last_payment_date?: string
