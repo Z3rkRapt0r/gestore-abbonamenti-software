@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
       lastName,
       email,
       projectName,
-      githubRepoTemplate,
+      softwareId,
       vercelToken,
       vercelTeamId,
       subscriptionPrice,
@@ -37,14 +37,14 @@ export async function POST(request: NextRequest) {
       lastName: !!lastName,
       email: !!email,
       projectName: !!projectName,
-      githubRepoTemplate: !!githubRepoTemplate,
+      softwareId: !!softwareId,
       vercelToken: !!vercelToken,
       subscriptionPrice: !!subscriptionPrice,
       subscriptionStatus
     });
 
     // Validazione input
-    if (!firstName || !lastName || !email || !projectName || !githubRepoTemplate || !vercelToken || subscriptionPrice === undefined || subscriptionPrice === null) {
+    if (!firstName || !lastName || !email || !projectName || !softwareId || !vercelToken || subscriptionPrice === undefined || subscriptionPrice === null) {
       console.log('❌ Validazione fallita - campi mancanti');
       return NextResponse.json({ 
         error: "Tutti i campi obbligatori devono essere compilati",
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       last_name: lastName,
       email,
       project_name: projectName,
-      github_repo_template: githubRepoTemplate,
+      software_id: softwareId,
       client_slug: clientSlug,
       vercel_token: vercelToken,
       vercel_team_id: vercelTeamId,

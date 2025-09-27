@@ -11,12 +11,23 @@ export async function POST(request: NextRequest) {
     const clientSlug = body.projectName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-*|-*$/g, '');
     console.log("🔗 Client slug generato:", clientSlug);
 
+    // Ottieni il primo software disponibile per i test
+    const software = await db.getActiveSoftware();
+    const defaultSoftwareId = software.length > 0 ? software[0].id : null;
+    
+    if (!defaultSoftwareId) {
+      return NextResponse.json({ 
+        success: false,
+        error: "Nessun software configurato. Crea prima un software." 
+      }, { status: 400 });
+    }
+
     const subscriberData = {
       first_name: body.firstName,
       last_name: body.lastName,
       email: body.email,
       project_name: body.projectName,
-      github_repo_template: body.githubRepoTemplate,
+      software_id: defaultSoftwareId,
       client_slug: clientSlug,
       vercel_token: body.vercelToken,
       vercel_team_id: body.vercelTeamId || null,
