@@ -13,8 +13,6 @@ export interface Configuration {
   id: string
   github_token: string
   github_username: string
-  stripe_secret_key: string
-  stripe_webhook_secret: string
   maintenance_deployment_id?: string
   created_at: string
   updated_at: string

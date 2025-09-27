@@ -10,13 +10,13 @@ const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { githubToken, githubUsername, stripeSecretKey, stripeWebhookSecret, maintenanceDeploymentId } = body;
+    const { githubToken, githubUsername, maintenanceDeploymentId } = body;
 
     // Validazione input
-    if (!githubToken || !githubUsername || !stripeSecretKey || !stripeWebhookSecret) {
+    if (!githubToken || !githubUsername) {
       return NextResponse.json({ 
         success: false,
-        error: "Tutti i campi sono obbligatori" 
+        error: "GitHub Token e Username sono obbligatori" 
       }, { status: 400 });
     }
 
@@ -38,8 +38,6 @@ export async function POST(request: NextRequest) {
         id: configId,
         github_token: githubToken,
         github_username: githubUsername,
-        stripe_secret_key: stripeSecretKey,
-        stripe_webhook_secret: stripeWebhookSecret,
         maintenance_deployment_id: maintenanceDeploymentId || null,
         updated_at: new Date().toISOString(),
       })
@@ -100,11 +98,9 @@ export async function GET() {
       });
     }
 
-    // Mascara le chiavi sensibili per la risposta
+    // Configurazione pulita (solo campi necessari)
     const safeConfig = {
       ...data,
-      stripe_secret_key: data.stripe_secret_key ? "••••••••••••••••••••••••••••••••" : null,
-      stripe_webhook_secret: data.stripe_webhook_secret ? "••••••••••••••••••••••••••••••••" : null,
     };
 
     return NextResponse.json({

@@ -27,8 +27,6 @@ export default function Settings() {
   const [formData, setFormData] = useState({
     githubToken: "",
     githubUsername: "",
-    stripeSecretKey: "",
-    stripeWebhookSecret: "",
     maintenanceDeploymentId: "",
   });
 
@@ -49,8 +47,6 @@ export default function Settings() {
           setFormData({
             githubToken: result.config.github_token || "",
             githubUsername: result.config.github_username || "",
-            stripeSecretKey: result.config.stripe_secret_key ? "••••••••••••••••••••••••••••••••" : "",
-            stripeWebhookSecret: result.config.stripe_webhook_secret ? "••••••••••••••••••••••••••••••••" : "",
             maintenanceDeploymentId: result.config.maintenance_deployment_id || "",
           });
         }
@@ -217,65 +213,6 @@ export default function Settings() {
               </div>
             </div>
 
-            {/* Stripe Configuration */}
-            <div className="bg-gradient-to-r from-gray-50 to-purple-50 rounded-xl p-6 border border-gray-200">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center mr-3">
-                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.274 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.407-2.354 1.407-1.916 0-4.897-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.445 0-3.338-1.966-5.338-6.591-7.592z"/>
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">Stripe</h3>
-                </div>
-                {config && (config as any).stripe_secret_key && (
-                  <div className="flex items-center text-green-600 text-sm">
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    Configurato
-                  </div>
-                )}
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label htmlFor="stripeSecretKey" className="block text-sm font-medium text-gray-700">
-                    Stripe Secret Key *
-                  </label>
-                  <input
-                    type="password"
-                    id="stripeSecretKey"
-                    value={formData.stripeSecretKey}
-                    onChange={(e) => handleInputChange("stripeSecretKey", e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                    placeholder="Inserisci la chiave segreta Stripe"
-                    required
-                  />
-                  <p className="text-xs text-gray-500">
-                    Chiave segreta Stripe per i pagamenti
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="stripeWebhookSecret" className="block text-sm font-medium text-gray-700">
-                    Stripe Webhook Secret *
-                  </label>
-                  <input
-                    type="password"
-                    id="stripeWebhookSecret"
-                    value={formData.stripeWebhookSecret}
-                    onChange={(e) => handleInputChange("stripeWebhookSecret", e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                    placeholder="whsec_xxxxxxxxxxxxxxxxxxxxxxxx"
-                    required
-                  />
-                  <p className="text-xs text-gray-500">
-                    Secret per verificare i webhook Stripe
-                  </p>
-                </div>
-              </div>
-            </div>
 
             {/* Maintenance Deployment */}
             <div className="bg-gradient-to-r from-gray-50 to-amber-50 rounded-xl p-6 border border-gray-200">
