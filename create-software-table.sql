@@ -16,9 +16,17 @@ CREATE TABLE IF NOT EXISTS software (
 ALTER TABLE subscribers 
 ADD COLUMN software_id UUID REFERENCES software(id);
 
--- Aggiungi indice per performance
-CREATE INDEX IF EXISTS idx_subscribers_software_id ON subscribers(software_id);
-CREATE INDEX IF EXISTS idx_software_active ON software(is_active);
+-- Aggiungi indice per performance (solo se non esistono)
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_subscribers_software_id') THEN
+        CREATE INDEX idx_subscribers_software_id ON subscribers(software_id);
+    END IF;
+    
+    IF NOT EXISTS (SELECT 1 FROM pg_indexes WHERE indexname = 'idx_software_active') THEN
+        CREATE INDEX idx_software_active ON software(is_active);
+    END IF;
+END $$;
 
 -- Inserisci software di default (esempio)
 INSERT INTO software (name, description, github_repo_template, github_token, payment_template_subject, payment_template_body) 
