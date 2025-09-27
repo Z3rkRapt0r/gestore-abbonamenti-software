@@ -200,7 +200,7 @@ export default function SubscriberDetailsModal({
                 <div>
                   <label className="text-sm font-medium text-gray-600">Repository Template</label>
                   <p className="text-gray-900 font-mono text-sm">
-                    {subscriber.github_repo_template || 'Non impostato'}
+                    {subscriber.software?.name || 'Non impostato'}
                   </p>
                 </div>
                 

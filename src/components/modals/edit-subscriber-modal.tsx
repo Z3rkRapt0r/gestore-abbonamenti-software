@@ -27,7 +27,7 @@ export default function EditSubscriberModal({
     edge_key: 'maintenance',
     vercel_token: '',
     vercel_team_id: '',
-    github_repo_template: '',
+    software_id: '',
     supabase_info: '',
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +46,7 @@ export default function EditSubscriberModal({
         edge_key: subscriber.edge_key || 'maintenance',
         vercel_token: subscriber.vercel_token || '',
         vercel_team_id: subscriber.vercel_team_id || '',
-        github_repo_template: subscriber.github_repo_template || '',
+        software_id: subscriber.software_id || '',
         supabase_info: subscriber.supabase_info || '',
       });
     }
@@ -249,16 +249,14 @@ export default function EditSubscriberModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                GitHub Repo Template
+                Software
               </label>
-              <input
-                type="text"
-                name="github_repo_template"
-                value={formData.github_repo_template}
-                onChange={handleInputChange}
-                placeholder="username/repo-name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+              <div className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600">
+                {subscriber.software?.name || 'Non impostato'}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Il software non può essere modificato dopo la creazione
+              </p>
             </div>
 
             <div>

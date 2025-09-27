@@ -35,13 +35,23 @@ export async function POST(request: NextRequest) {
       is_active: false
     });
     
+    // Ottieni il primo software disponibile per i test
+    const software = await db.getActiveSoftware();
+    const defaultSoftwareId = software.length > 0 ? software[0].id : null;
+    
+    if (!defaultSoftwareId) {
+      return NextResponse.json({ 
+        error: "Nessun software configurato. Crea prima un software." 
+      }, { status: 400 });
+    }
+
     // Crea il subscriber con stato PENDING
     const newSubscriber = await db.createSubscriber({
       first_name: firstName,
       last_name: lastName,
       email,
       project_name: projectName,
-      github_repo_template: 'test/template',
+      software_id: defaultSoftwareId,
       client_slug: clientSlug,
       vercel_token: 'test-token',
       vercel_team_id: 'test-team',
