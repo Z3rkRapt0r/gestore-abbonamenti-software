@@ -148,13 +148,49 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   
   console.log(`📅 Next billing date calculated: ${nextBillingDate}`);
 
-  // Calcola l'ultimo pagamento (usa la data di creazione della subscription come fallback)
+  // Recupera l'ultimo pagamento da Stripe
   let lastPaymentDate = null;
-  if (created) {
-    lastPaymentDate = new Date(created * 1000).toISOString();
+  try {
+    console.log(`🔍 Fetching invoices from Stripe for subscription: ${subscription.id}`);
+    const invoices = await stripe.invoices.list({
+      subscription: subscription.id,
+      limit: 5
+    });
+    
+    console.log(`📋 Found ${invoices.data.length} invoices`);
+    
+    if (invoices.data.length > 0) {
+      // Cerca la prima fattura pagata
+      const paidInvoice = invoices.data.find(invoice => 
+        invoice.status === 'paid' && (invoice as any).paid_at
+      );
+      
+      if (paidInvoice) {
+        lastPaymentDate = new Date((paidInvoice as any).paid_at * 1000).toISOString();
+        console.log(`✅ Found paid invoice: ${paidInvoice.id}, paid_at: ${lastPaymentDate}`);
+      } else {
+        // Se non trova fatture pagate, usa la data di creazione della subscription
+        if (created) {
+          lastPaymentDate = new Date(created * 1000).toISOString();
+          console.log(`📅 Using subscription creation date as last payment: ${lastPaymentDate}`);
+        }
+      }
+    } else {
+      // Se non ci sono fatture, usa la data di creazione della subscription
+      if (created) {
+        lastPaymentDate = new Date(created * 1000).toISOString();
+        console.log(`📅 No invoices found, using subscription creation date: ${lastPaymentDate}`);
+      }
+    }
+  } catch (error) {
+    console.error(`❌ Error fetching invoices from Stripe:`, error);
+    // Fallback alla data di creazione
+    if (created) {
+      lastPaymentDate = new Date(created * 1000).toISOString();
+    }
   }
   
-  console.log(`📅 Last payment date calculated: ${lastPaymentDate}`);
+  console.log(`📅 Last payment date: ${lastPaymentDate}`);
 
   await db.updateSubscriber(subscriberId, {
     stripe_subscription_id: subscription.id,
