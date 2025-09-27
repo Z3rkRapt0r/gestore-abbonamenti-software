@@ -7,9 +7,21 @@ export interface Admin {
 
 export interface Configuration {
   id: string;
-  github_token: string;
   github_username: string;
   maintenance_deployment_id?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Software {
+  id: string;
+  name: string;
+  description?: string;
+  github_repo_template: string;
+  github_token: string;
+  payment_template_subject: string;
+  payment_template_body: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -20,7 +32,7 @@ export interface Subscriber {
   last_name: string;
   email: string;
   project_name: string;
-  github_repo_template: string;
+  software_id: string;
   client_slug: string;
   vercel_token: string;
   vercel_team_id?: string;
@@ -42,6 +54,8 @@ export interface Subscriber {
   created_at: string;
   updated_at: string;
   notes?: string;
+  // Relazione con software
+  software?: Software;
 }
 
 export interface Payment {
@@ -62,7 +76,8 @@ export interface CreateSubscriberData {
   last_name: string;
   email: string;
   project_name: string;
-  github_repo_template: string;
+  software_id: string;
+  client_slug: string;
   vercel_token: string;
   vercel_team_id?: string;
   supabase_info?: string;

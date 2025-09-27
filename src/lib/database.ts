@@ -11,9 +11,21 @@ export interface Admin {
 
 export interface Configuration {
   id: string
-  github_token: string
   github_username: string
   maintenance_deployment_id?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Software {
+  id: string
+  name: string
+  description?: string
+  github_repo_template: string
+  github_token: string
+  payment_template_subject: string
+  payment_template_body: string
+  is_active: boolean
   created_at: string
   updated_at: string
 }
@@ -24,7 +36,7 @@ export interface Subscriber {
   last_name: string
   email: string
   project_name: string
-  github_repo_template: string
+  software_id: string
   client_slug: string
   vercel_token: string
   vercel_team_id?: string
@@ -46,6 +58,8 @@ export interface Subscriber {
   created_at: string
   updated_at: string
   notes?: string
+  // Relazione con software
+  software?: Software
 }
 
 export interface Payment {
@@ -195,6 +209,104 @@ export const db = {
     
     if (error) {
       console.error('Errore eliminazione subscriber:', error)
+      return false
+    }
+    return true
+  },
+
+  // ===== SOFTWARE OPERATIONS =====
+  
+  // Get all software
+  async getAllSoftware(): Promise<Software[]> {
+    const { data, error } = await supabaseAdmin
+      .from('software')
+      .select('*')
+      .order('name')
+    
+    if (error) {
+      console.error('Errore recupero software:', error)
+      return []
+    }
+    return data || []
+  },
+
+  // Get active software
+  async getActiveSoftware(): Promise<Software[]> {
+    const { data, error } = await supabaseAdmin
+      .from('software')
+      .select('*')
+      .eq('is_active', true)
+      .order('name')
+    
+    if (error) {
+      console.error('Errore recupero software attivi:', error)
+      return []
+    }
+    return data || []
+  },
+
+  // Get software by ID
+  async getSoftwareById(id: string): Promise<Software | null> {
+    const { data, error } = await supabaseAdmin
+      .from('software')
+      .select('*')
+      .eq('id', id)
+      .single()
+    
+    if (error) {
+      console.error('Errore recupero software:', error)
+      return null
+    }
+    return data
+  },
+
+  // Create software
+  async createSoftware(softwareData: Omit<Software, 'id' | 'created_at' | 'updated_at'>): Promise<Software | null> {
+    const { data, error } = await supabaseAdmin
+      .from('software')
+      .insert({
+        ...softwareData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Errore creazione software:', error)
+      return null
+    }
+    return data
+  },
+
+  // Update software
+  async updateSoftware(id: string, updates: Partial<Omit<Software, 'id' | 'created_at' | 'updated_at'>>): Promise<Software | null> {
+    const { data, error } = await supabaseAdmin
+      .from('software')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Errore aggiornamento software:', error)
+      return null
+    }
+    return data
+  },
+
+  // Delete software
+  async deleteSoftware(id: string): Promise<boolean> {
+    const { error } = await supabaseAdmin
+      .from('software')
+      .delete()
+      .eq('id', id)
+    
+    if (error) {
+      console.error('Errore eliminazione software:', error)
       return false
     }
     return true
