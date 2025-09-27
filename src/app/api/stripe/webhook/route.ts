@@ -149,6 +149,9 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
               if (subscriptionType === 'daily') {
                 // Per abbonamenti giornalieri, aggiungi 1 giorno
                 baseDate.setDate(baseDate.getDate() + 1);
+              } else if (subscriptionType === 'yearly') {
+                // Per abbonamenti annuali, aggiungi 1 anno
+                baseDate.setFullYear(baseDate.getFullYear() + 1);
               } else {
                 // Per abbonamenti mensili, aggiungi 1 mese
                 baseDate.setMonth(baseDate.getMonth() + 1);

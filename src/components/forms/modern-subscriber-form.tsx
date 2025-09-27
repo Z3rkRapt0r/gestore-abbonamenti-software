@@ -32,7 +32,7 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
   
   // Stato abbonamento (default: PENDING)
   const [subscriptionStatus, setSubscriptionStatus] = useState<'PENDING' | 'ACTIVE'>('PENDING');
-  const [subscriptionType, setSubscriptionType] = useState<'monthly' | 'daily'>('monthly');
+  const [subscriptionType, setSubscriptionType] = useState<'monthly' | 'daily' | 'yearly'>('monthly');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currentStep, setCurrentStep] = useState(1);
@@ -499,7 +499,7 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
             name="subscription_type"
             value="monthly"
             checked={subscriptionType === 'monthly'}
-            onChange={(e) => setSubscriptionType(e.target.value as 'monthly' | 'daily')}
+            onChange={(e) => setSubscriptionType(e.target.value as 'monthly' | 'daily' | 'yearly')}
             className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
           />
           <span className="ml-2 text-sm text-gray-700">📅 Mensile</span>
@@ -510,10 +510,21 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
             name="subscription_type"
             value="daily"
             checked={subscriptionType === 'daily'}
-            onChange={(e) => setSubscriptionType(e.target.value as 'monthly' | 'daily')}
+            onChange={(e) => setSubscriptionType(e.target.value as 'monthly' | 'daily' | 'yearly')}
             className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
           />
           <span className="ml-2 text-sm text-gray-700">📆 Giornaliero</span>
+        </label>
+        <label className="flex items-center">
+          <input
+            type="radio"
+            name="subscription_type"
+            value="yearly"
+            checked={subscriptionType === 'yearly'}
+            onChange={(e) => setSubscriptionType(e.target.value as 'monthly' | 'daily' | 'yearly')}
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+          />
+          <span className="ml-2 text-sm text-gray-700">📅 Annuale</span>
         </label>
       </div>
       <p className="text-xs text-gray-500">
