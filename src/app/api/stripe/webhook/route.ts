@@ -200,8 +200,8 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   await db.updateSubscriber(subscriberId, {
     stripe_subscription_id: subscription.id,
     subscription_status: subscription.status === 'active' ? 'ACTIVE' : 'PAST_DUE',
-    next_billing_date: nextBillingDate,
-    last_payment_date: lastPaymentDate,
+    next_billing_date: nextBillingDate || undefined,
+    last_payment_date: lastPaymentDate || undefined,
     is_active: subscription.status === 'active',
   });
 
