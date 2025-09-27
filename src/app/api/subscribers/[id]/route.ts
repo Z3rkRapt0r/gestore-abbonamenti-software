@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
 import { db } from "@/lib/database";
+import { deleteCustomerFromStripe } from "@/lib/stripe-helpers";
 
 // GET /api/subscribers/[id] - Recupera un subscriber specifico
 export async function GET(
@@ -112,7 +113,7 @@ export async function PUT(
   }
 }
 
-// DELETE /api/subscribers/[id] - Elimina un subscriber
+// DELETE /api/subscribers/[id] - Elimina un subscriber (cancellazione completa da Stripe + Database)
 export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
@@ -132,27 +133,68 @@ export async function DELETE(
     }
     console.log('✅ Subscriber trovato:', existingSubscriber.email);
 
-    // Elimina il subscriber
-    console.log('🗑️ Eliminando subscriber...');
+    // 1. CANCELLAZIONE DA STRIPE (se esistono dati Stripe)
+    let stripeDeletionResult = null;
+    if (existingSubscriber.stripe_customer_id || existingSubscriber.stripe_subscription_id) {
+      console.log('🔄 Iniziando cancellazione da Stripe...');
+      console.log(`   - Customer ID: ${existingSubscriber.stripe_customer_id || 'N/A'}`);
+      console.log(`   - Subscription ID: ${existingSubscriber.stripe_subscription_id || 'N/A'}`);
+      
+      stripeDeletionResult = await deleteCustomerFromStripe(
+        existingSubscriber.stripe_customer_id,
+        existingSubscriber.stripe_subscription_id
+      );
+      
+      if (stripeDeletionResult.success) {
+        console.log('✅ Cancellazione Stripe completata con successo');
+        if (stripeDeletionResult.subscriptionCanceled) {
+          console.log('   - Subscription cancellata');
+        }
+        if (stripeDeletionResult.customerDeleted) {
+          console.log('   - Customer eliminato');
+        }
+      } else {
+        console.log('⚠️ Cancellazione Stripe completata con errori:', stripeDeletionResult.errors);
+        // Continuiamo comunque con l'eliminazione dal database
+      }
+    } else {
+      console.log('ℹ️ Nessun dato Stripe da cancellare');
+    }
+
+    // 2. ELIMINAZIONE DAL DATABASE
+    console.log('🗑️ Eliminando subscriber dal database...');
     const deleteResult = await db.deleteSubscriber(id);
     
     if (!deleteResult) {
-      console.log('❌ Errore durante eliminazione subscriber');
+      console.log('❌ Errore durante eliminazione subscriber dal database');
       return NextResponse.json({ 
-        error: "Errore durante l'eliminazione" 
+        error: "Errore durante l'eliminazione dal database" 
       }, { status: 500 });
     }
     
-    console.log('✅ Subscriber eliminato con successo:', existingSubscriber.email);
+    console.log('✅ Subscriber eliminato dal database con successo:', existingSubscriber.email);
 
-    return NextResponse.json({
+    // 3. RISPOSTA CON DETTAGLI
+    const response: any = {
       success: true,
       message: "Subscriber eliminato con successo",
-    });
+      details: {
+        database: "Eliminato",
+        stripe: stripeDeletionResult ? {
+          success: stripeDeletionResult.success,
+          subscriptionCanceled: stripeDeletionResult.subscriptionCanceled || false,
+          customerDeleted: stripeDeletionResult.customerDeleted || false,
+          errors: stripeDeletionResult.errors || []
+        } : "Nessun dato Stripe da cancellare"
+      }
+    };
+
+    return NextResponse.json(response);
   } catch (error: unknown) {
     console.error("Errore nell'eliminazione subscriber:", error);
     return NextResponse.json({ 
-      error: "Errore interno del server" 
+      error: "Errore interno del server",
+      details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
   }
 }
