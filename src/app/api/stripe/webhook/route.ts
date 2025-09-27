@@ -99,16 +99,23 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
   const subscriberId = subscription.metadata?.subscriber_id;
   
+  console.log(`🔍 Subscription created - subscriber_id: ${subscriberId}`);
+  console.log(`🔍 Subscription metadata:`, subscription.metadata);
+  
   if (!subscriberId) {
     console.error("No subscriber_id in subscription metadata");
     return;
   }
 
+  console.log(`🔍 Looking for subscriber with ID: ${subscriberId}`);
   const subscriber = await db.getSubscriberById(subscriberId);
   if (!subscriber) {
-    console.error(`Subscriber not found: ${subscriberId}`);
+    console.error(`❌ Subscriber not found: ${subscriberId}`);
+    console.log(`🔍 Available subscribers:`, await db.getSubscribers());
     return;
   }
+  
+  console.log(`✅ Subscriber found: ${subscriber.email}`);
 
   // Calcola la prossima data di fatturazione
   const nextBillingDate = (subscription as any).current_period_end 
