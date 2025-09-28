@@ -77,7 +77,6 @@ export async function POST(request: NextRequest) {
       subscription_status: subscriptionStatus || 'PENDING', // Forza PENDING se non specificato
       is_active: subscriptionStatus === 'ACTIVE', // Forza false se non ACTIVE
       subscription_type: subscriptionType || 'monthly', // Default mensile
-      github_repo_template: '', // Campo temporaneo per compatibilità schema
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
