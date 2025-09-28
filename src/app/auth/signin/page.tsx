@@ -14,18 +14,24 @@ export default function SignIn() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🔍 Form submitted with:', { email, password: '***' });
     setLoading(true);
     setError("");
 
     try {
+      console.log('📝 Calling signIn...');
       const { error } = await signIn(email, password);
+      console.log('📋 SignIn result:', { error: error?.message || 'No error' });
 
       if (error) {
+        console.log('❌ Login error:', error);
         setError("Credenziali non valide");
       } else {
+        console.log('✅ Login successful, redirecting...');
         router.push("/dashboard");
       }
-    } catch {
+    } catch (err) {
+      console.log('❌ Login exception:', err);
       setError("Errore durante il login");
     } finally {
       setLoading(false);
