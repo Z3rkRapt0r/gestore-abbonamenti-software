@@ -41,11 +41,6 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Debug logging
-  console.log('🔍 Middleware - Path:', request.nextUrl.pathname)
-  console.log('🔍 Middleware - User:', user ? `${user.email} (${user.id})` : 'No user')
-  console.log('🔍 Middleware - Cookies:', request.cookies.getAll().map(c => c.name).join(', '))
-
   // Proteggi le route API che richiedono autenticazione
   if (request.nextUrl.pathname.startsWith('/api/') && 
       !request.nextUrl.pathname.startsWith('/api/debug-') &&
