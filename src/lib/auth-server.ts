@@ -37,10 +37,17 @@ export async function getServerUser() {
 
 // Funzione per verificare se l'utente è autenticato
 export async function requireAuth() {
-  const user = await getServerUser()
-  if (!user) {
+  try {
+    const user = await getServerUser()
+    if (!user) {
+      console.log('❌ Utente non autenticato')
+      throw new Error('Non autorizzato')
+    }
+    console.log('✅ Utente autenticato:', user.email)
+    return user
+  } catch (error) {
+    console.log('❌ Errore autenticazione:', error)
     throw new Error('Non autorizzato')
   }
-  return user
 }
 
