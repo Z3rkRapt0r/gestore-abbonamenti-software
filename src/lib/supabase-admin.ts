@@ -2,14 +2,27 @@
 import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+if (!supabaseUrl) {
+  throw new Error('NEXT_PUBLIC_SUPABASE_URL is required')
 }
 
-// Client Supabase per operazioni server-side (usa anon key per ora)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseAnonKey)
+if (!supabaseServiceKey) {
+  console.warn('SUPABASE_SERVICE_ROLE_KEY not found, using anon key (limited functionality)')
+}
+
+// Client Supabase per operazioni server-side (usa service key per operazioni admin)
+export const supabaseAdmin = createClient(
+  supabaseUrl, 
+  supabaseServiceKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
 
 // Client normale per operazioni client-side
 export { supabase } from './supabase'
