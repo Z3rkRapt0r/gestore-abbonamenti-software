@@ -54,7 +54,6 @@ export async function PUT(
       edge_key,
       vercel_token,
       vercel_team_id,
-      github_repo_template,
       supabase_info,
     } = body;
 
@@ -87,7 +86,6 @@ export async function PUT(
       edge_key: edge_key || 'maintenance',
       vercel_token,
       vercel_team_id,
-      github_repo_template,
       supabase_info,
     });
 
