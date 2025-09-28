@@ -222,7 +222,7 @@ export function parseGitHubUrl(url: string): { owner: string; repo: string } | n
     if (match) {
       return {
         owner: match[1],
-        repo: match[2],
+        repo: match[2].replace(/\.git$/, ''), // Rimuovi .git dalla fine
       };
     }
     return null;
