@@ -5,8 +5,7 @@ import { db } from "@/lib/database";
 // GET /api/software - Recupera tutti i software
 export async function GET() {
   try {
-    // Temporaneamente disabilito l'autenticazione per permettere visualizzazione
-    // await requireAuth();
+    await requireAuth();
     
     const software = await db.getAllSoftware();
     

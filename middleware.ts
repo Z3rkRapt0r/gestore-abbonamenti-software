@@ -45,7 +45,6 @@ export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith('/api/') && 
       !request.nextUrl.pathname.startsWith('/api/debug-') &&
       !request.nextUrl.pathname.startsWith('/api/test') &&
-      !request.nextUrl.pathname.startsWith('/api/software') && // Temporaneamente escluso
       !request.nextUrl.pathname.startsWith('/api/force-login') && // Escluso per login
       !request.nextUrl.pathname.startsWith('/api/auth/') && // Escluso per autenticazione
       !user) {
