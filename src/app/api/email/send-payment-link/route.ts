@@ -234,9 +234,8 @@ function generatePaymentEmailFromTemplate(subscriber: any, checkoutUrl: string):
   // Altrimenti, wrappa il testo in HTML con grafica e pulsante
   const htmlBody = processedBody.replace(/\n/g, '<br>');
   
-  // Estrai il pulsante dal template se presente
-  const buttonMatch = processedBody.match(/\{payment_link\}/);
-  const hasButton = buttonMatch !== null;
+  // Controlla se il template originale contiene {payment_link} per aggiungere il pulsante
+  const hasButton = templateBody.includes('{payment_link}');
   
   return `
 <!DOCTYPE html>

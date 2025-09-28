@@ -80,7 +80,7 @@ function generateEmailPreview(subject: string, body: string, sampleData: any): s
   // Altrimenti, wrappa il testo in HTML con grafica e pulsante
   const htmlBody = body.replace(/\n/g, '<br>');
   
-  // Controlla se c'è un link di pagamento per aggiungere il pulsante
+  // Controlla se il template originale contiene {payment_link} per aggiungere il pulsante
   const hasButton = body.includes('{payment_link}');
   
   return `

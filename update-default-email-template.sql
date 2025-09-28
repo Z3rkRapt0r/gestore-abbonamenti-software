@@ -1,5 +1,6 @@
 -- Aggiorna il template email di default per tutti i software
 -- Usa il template più completo che era hardcoded come base
+-- INCLUDE IL PULSANTE HTML E LA GRAFICA
 
 UPDATE software 
 SET payment_template_subject = 'Completa il pagamento per {software_name}',
@@ -15,7 +16,7 @@ Dettagli Abbonamento:
 • Fatturazione: Mensile
 • Pagamento: Carta di credito/debito
 
-Clicca sul link qui sotto per completare il pagamento:
+Clicca sul pulsante qui sotto per completare il pagamento:
 
 {payment_link}
 
