@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from '@supabase/supabase-js';
-
-// Configurazione Supabase
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // POST /api/edge-create-subscriber - Edge function per creazione subscriber con controllo stato
 export async function POST(request: NextRequest) {
@@ -84,7 +78,7 @@ export async function POST(request: NextRequest) {
 
     // Inserimento diretto nel database con controllo esplicito
     console.log('🔍 Inserting subscriber data:', subscriberData);
-    const { data: newSubscriber, error } = await supabase
+    const { data: newSubscriber, error } = await supabaseAdmin
       .from('subscribers')
       .insert(subscriberData)
       .select()
