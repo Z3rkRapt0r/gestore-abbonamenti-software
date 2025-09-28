@@ -15,7 +15,7 @@ export function CreateSubscriberForm({ onSubmit, loading = false }: CreateSubscr
     last_name: '',
     email: '',
     project_name: '',
-    github_repo_template: '',
+    software_id: '',
     vercel_token: '',
     vercel_team_id: '',
     supabase_info: '',
@@ -63,8 +63,8 @@ export function CreateSubscriberForm({ onSubmit, loading = false }: CreateSubscr
       newErrors.project_name = 'Il nome del progetto è obbligatorio';
     }
 
-    if (!validateRequired(formData.github_repo_template)) {
-      newErrors.github_repo_template = 'Il template del repository è obbligatorio';
+    if (!validateRequired(formData.software_id)) {
+      newErrors.software_id = 'Il software è obbligatorio';
     }
 
     if (!validateRequired(formData.vercel_token)) {
@@ -94,7 +94,7 @@ export function CreateSubscriberForm({ onSubmit, loading = false }: CreateSubscr
         last_name: '',
         email: '',
         project_name: '',
-        github_repo_template: '',
+        software_id: '',
         vercel_token: '',
         vercel_team_id: '',
         supabase_info: '',
@@ -192,25 +192,25 @@ export function CreateSubscriberForm({ onSubmit, loading = false }: CreateSubscr
       </div>
 
       <div>
-        <label htmlFor="github_repo_template" className="block text-sm font-medium text-gray-700">
-          Template Repository GitHub *
+        <label htmlFor="software_id" className="block text-sm font-medium text-gray-700">
+          Software *
         </label>
         <input
           type="text"
-          name="github_repo_template"
-          id="github_repo_template"
-          value={formData.github_repo_template}
+          name="software_id"
+          id="software_id"
+          value={formData.software_id}
           onChange={handleInputChange}
           className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
-            errors.github_repo_template ? 'border-red-300' : ''
+            errors.software_id ? 'border-red-300' : ''
           }`}
-          placeholder="gestore-abbonamenti-software"
+          placeholder="ID del software"
         />
         <p className="mt-1 text-sm text-gray-500">
-          Nome del repository template da clonare (senza il nome utente)
+          ID del software da assegnare al cliente
         </p>
-        {errors.github_repo_template && (
-          <p className="mt-1 text-sm text-red-600">{errors.github_repo_template}</p>
+        {errors.software_id && (
+          <p className="mt-1 text-sm text-red-600">{errors.software_id}</p>
         )}
       </div>
 
