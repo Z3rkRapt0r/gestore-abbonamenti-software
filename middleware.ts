@@ -46,6 +46,8 @@ export async function middleware(request: NextRequest) {
       !request.nextUrl.pathname.startsWith('/api/debug-') &&
       !request.nextUrl.pathname.startsWith('/api/test') &&
       !request.nextUrl.pathname.startsWith('/api/software') && // Temporaneamente escluso
+      !request.nextUrl.pathname.startsWith('/api/force-login') && // Escluso per login
+      !request.nextUrl.pathname.startsWith('/api/auth/') && // Escluso per autenticazione
       !user) {
     return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 })
   }
