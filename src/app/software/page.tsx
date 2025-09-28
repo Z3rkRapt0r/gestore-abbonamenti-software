@@ -12,6 +12,8 @@ export default function SoftwarePage() {
   const [loadingSoftware, setLoadingSoftware] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingSoftware, setEditingSoftware] = useState<Software | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewData, setPreviewData] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -72,6 +74,39 @@ export default function SoftwarePage() {
     }
   };
 
+  const handlePreviewEmail = async () => {
+    try {
+      const response = await fetch("/api/email/preview-template", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          templateSubject: formData.payment_template_subject,
+          templateBody: formData.payment_template_body,
+          sampleData: {
+            first_name: 'Mario',
+            last_name: 'Rossi',
+            email: 'mario.rossi@example.com',
+            project_name: formData.name || 'Progetto Demo',
+            software_name: formData.name || 'Software Demo',
+            payment_link: 'https://checkout.stripe.com/pay/cs_test_123456789',
+            subscription_price: '29.99',
+          }
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setPreviewData(result.preview);
+        setShowPreview(true);
+      } else {
+        alert("Errore nella generazione anteprima");
+      }
+    } catch (error) {
+      console.error("Errore nell'anteprima:", error);
+      alert("Errore di rete nell'anteprima");
+    }
+  };
+
   const handleEdit = (software: Software) => {
     setEditingSoftware(software);
     setFormData({
@@ -123,6 +158,8 @@ export default function SoftwarePage() {
   const handleCancel = () => {
     setShowForm(false);
     setEditingSoftware(null);
+    setShowPreview(false);
+    setPreviewData(null);
     resetForm();
   };
 
@@ -321,6 +358,13 @@ export default function SoftwarePage() {
                     <p className="text-xs text-gray-500 mt-1">
                       Usa {"{software_name}"}, {"{first_name}"}, {"{payment_link}"} per personalizzare
                     </p>
+                    <button
+                      type="button"
+                      onClick={handlePreviewEmail}
+                      className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                    >
+                      👁️ Anteprima Email
+                    </button>
                   </div>
 
                   <div className="flex items-center">
@@ -356,7 +400,53 @@ export default function SoftwarePage() {
             </div>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
+        
+        {/* Modal Anteprima Email */}
+        {showPreview && previewData && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+              <div className="flex justify-between items-center p-6 border-b">
+                <h2 className="text-2xl font-bold text-gray-900">📧 Anteprima Email</h2>
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Oggetto:</h3>
+                  <div className="bg-gray-100 p-3 rounded-lg">
+                    {previewData.subject}
+                  </div>
+                </div>
+                
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Contenuto:</h3>
+                  <div className="bg-gray-100 p-3 rounded-lg whitespace-pre-line">
+                    {previewData.body}
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Anteprima HTML:</h3>
+                  <div 
+                    className="border rounded-lg overflow-hidden"
+                    dangerouslySetInnerHTML={{ __html: previewData.html }}
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end p-6 border-t">
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors"
+                >
+                  Chiudi
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
