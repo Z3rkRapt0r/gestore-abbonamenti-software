@@ -4,13 +4,14 @@ import { db } from "@/lib/database";
 // GET /api/test - Test connessione Supabase senza autenticazione
 export async function GET() {
   try {
-    // Test connessione base
-    const configuration = await db.getConfiguration();
+    // Test connessione base - ora testiamo con i software invece delle configurazioni
+    const software = await db.getActiveSoftware();
     
     return NextResponse.json({
       success: true,
       message: "Connessione Supabase funzionante",
-      hasConfiguration: !!configuration,
+      activeSoftwareCount: software.length,
+      software: software.map(s => ({ id: s.id, name: s.name })),
       timestamp: new Date().toISOString()
     });
   } catch (error: unknown) {
