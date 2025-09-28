@@ -127,6 +127,15 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
+    console.log('🔍 Validating form with data:', {
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      email: formData.email,
+      project_name: formData.project_name,
+      software_id: formData.software_id,
+      subscription_price: formData.subscription_price,
+    });
+
     if (!validateRequired(formData.first_name)) {
       newErrors.first_name = 'Il nome è obbligatorio';
     }
@@ -153,6 +162,7 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
       newErrors.subscription_price = 'Il prezzo deve essere maggiore di 0';
     }
 
+    console.log('🔍 Validation errors:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -160,19 +170,27 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🔍 Form submitted, current step:', currentStep);
+    
     // Se non siamo all'ultimo step, vai al prossimo
     if (currentStep < totalSteps) {
+      console.log('🔍 Not last step, validating current step...');
       if (!validateCurrentStep()) {
+        console.log('❌ Current step validation failed');
         return;
       }
+      console.log('✅ Current step validation passed, going to next step');
       nextStep();
       return;
     }
     
     // Se siamo all'ultimo step, valida tutto e invia
+    console.log('🔍 Last step, validating entire form...');
     if (!validateForm()) {
+      console.log('❌ Form validation failed');
       return;
     }
+    console.log('✅ Form validation passed, submitting...');
 
     try {
       const payload = {
@@ -195,7 +213,8 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
 
       // Chiama la callback per aggiornare la dashboard (che gestirà la chiamata API)
       await onSubmit(payload);
-      // Reset form on success
+      
+      // Reset form SOLO in caso di successo
       setFormData({
         first_name: '',
         last_name: '',
@@ -215,6 +234,7 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
       setSubscriptionStatus('PENDING');
       setSubscriptionType('monthly');
       setCurrentStep(1);
+      setErrors({}); // Pulisci anche gli errori
     } catch (error) {
       console.error('Errore durante la creazione dell\'abbonato:', error);
     }
