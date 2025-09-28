@@ -11,6 +11,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log('🔍 Edge-create-subscriber received body:', body);
     
     const {
       firstName,
@@ -30,8 +31,15 @@ export async function POST(request: NextRequest) {
       subscriptionType,
     } = body;
 
+    console.log('🔍 Extracted fields:', {
+      firstName, lastName, email, projectName, softwareId, 
+      vercelToken: vercelToken ? 'Present' : 'Missing',
+      subscriptionPrice, subscriptionStatus, subscriptionType
+    });
+
     // Validazione input
-    if (!firstName || !lastName || !email || !projectName || !softwareId || !vercelToken || subscriptionPrice === undefined || subscriptionPrice === null || subscriptionPrice === '') {
+    if (!firstName || !lastName || !email || !projectName || !softwareId || subscriptionPrice === undefined || subscriptionPrice === null || subscriptionPrice === '') {
+      console.log('❌ Validation failed - missing required fields');
       return NextResponse.json({ error: "Tutti i campi obbligatori devono essere compilati" }, { status: 400 });
     }
 
@@ -58,7 +66,7 @@ export async function POST(request: NextRequest) {
       project_name: projectName,
       software_id: softwareId,
       client_slug: clientSlug,
-      vercel_token: vercelToken,
+      vercel_token: vercelToken || '',
       vercel_team_id: vercelTeamId,
       subscription_price: numericSubscriptionPrice,
       supabase_info: supabaseInfo,
