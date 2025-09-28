@@ -4,6 +4,12 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 // POST /api/edge-create-subscriber - Edge function per creazione subscriber con controllo stato
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔍 Environment check:', {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Present' : 'Missing',
+      serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Present' : 'Missing',
+      anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Present' : 'Missing'
+    });
+    
     const body = await request.json();
     console.log('🔍 Edge-create-subscriber received body:', body);
     
