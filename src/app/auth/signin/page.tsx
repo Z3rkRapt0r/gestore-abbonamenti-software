@@ -93,6 +93,7 @@ export default function SignIn() {
                     name="password"
                     type="password"
                     required
+                    autoComplete="current-password"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
                     placeholder="••••••••"
                     value={password}
