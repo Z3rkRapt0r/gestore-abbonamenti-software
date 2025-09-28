@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
           lastName: !!lastName,
           email: !!email,
           projectName: !!projectName,
-          githubRepoTemplate: !!githubRepoTemplate,
+          softwareId: !!softwareId,
           vercelToken: !!vercelToken,
           subscriptionPrice: subscriptionPrice,
           subscriptionPriceType: typeof subscriptionPrice
