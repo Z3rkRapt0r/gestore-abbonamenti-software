@@ -114,14 +114,6 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
     } else if (currentStep === 2) {
       // Validazione Step 2: Configurazione
 
-      if (!validateRequired(formData.vercel_token)) {
-        newErrors.vercel_token = 'Il token Vercel è obbligatorio';
-      }
-
-      if (!validateRequired(formData.vercel_team_id)) {
-        newErrors.vercel_team_id = 'Il Team ID Vercel è obbligatorio';
-      }
-
       if (formData.subscription_price <= 0) {
         newErrors.subscription_price = 'Il prezzo deve essere maggiore di 0';
       }
@@ -155,10 +147,6 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
 
     if (!validateRequired(formData.software_id)) {
       newErrors.software_id = 'Il software è obbligatorio';
-    }
-
-    if (!validateRequired(formData.vercel_token)) {
-      newErrors.vercel_token = 'Il token Vercel è obbligatorio';
     }
 
     if (formData.subscription_price <= 0) {
@@ -442,7 +430,7 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label htmlFor="vercel_token" className="block text-sm font-medium text-gray-700">
-                  Token Vercel *
+                  Token Vercel (opzionale)
                 </label>
                 <input
                   type="password"
@@ -450,14 +438,12 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
                   id="vercel_token"
                   value={formData.vercel_token}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white/80 backdrop-blur-sm ${
-                    errors.vercel_token ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
                   placeholder="vercel_xxxxxxxxxxxx"
                 />
-                {errors.vercel_token && (
-                  <p className="text-sm text-red-600">{errors.vercel_token}</p>
-                )}
+                <p className="text-xs text-gray-500">
+                  Token Vercel per gestire deploy e manutenzione automatica. Opzionale se il cliente gestisce il proprio deploy.
+                </p>
               </div>
 
               <div className="space-y-2">
