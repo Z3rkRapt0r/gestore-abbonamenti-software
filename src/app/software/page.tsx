@@ -450,3 +450,7 @@ export default function SoftwarePage() {
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
