@@ -476,49 +476,31 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label htmlFor="subscription_price" className="block text-sm font-medium text-gray-700">
-                  Prezzo Sottoscrizione (€) *
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-500 sm:text-sm">€</span>
-                  </div>
-                  <input
-                    type="number"
-                    name="subscription_price"
-                    id="subscription_price"
-                    min="0"
-                    step="0.01"
-                    value={formData.subscription_price}
-                    onChange={handleInputChange}
-                    className={`w-full pl-8 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white/80 backdrop-blur-sm ${
-                      errors.subscription_price ? 'border-red-300' : 'border-gray-300'
-                    }`}
-                    placeholder="29.99"
-                  />
+            <div className="space-y-2">
+              <label htmlFor="subscription_price" className="block text-sm font-medium text-gray-700">
+                Prezzo Sottoscrizione (€) *
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-gray-500 sm:text-sm">€</span>
                 </div>
-                {errors.subscription_price && (
-                  <p className="text-sm text-red-600">{errors.subscription_price}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="subscription_type" className="block text-sm font-medium text-gray-700">
-                  Tipo Sottoscrizione
-                </label>
-                <select
-                  name="subscription_type"
-                  id="subscription_type"
-                  value={formData.subscription_type}
+                <input
+                  type="number"
+                  name="subscription_price"
+                  id="subscription_price"
+                  min="0"
+                  step="0.01"
+                  value={formData.subscription_price}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white/80 backdrop-blur-sm"
-                >
-                  <option value="monthly">Mensile</option>
-                  <option value="yearly">Annuale</option>
-                </select>
+                  className={`w-full pl-8 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 bg-white/80 backdrop-blur-sm ${
+                    errors.subscription_price ? 'border-red-300' : 'border-gray-300'
+                  }`}
+                  placeholder="29.99"
+                />
               </div>
+              {errors.subscription_price && (
+                <p className="text-sm text-red-600">{errors.subscription_price}</p>
+              )}
             </div>
 
     <div className="space-y-2">
