@@ -23,28 +23,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Abbonato non trovato" }, { status: 404 });
     }
 
+    if (!subscriber.software) {
+      return NextResponse.json({ error: "Software non configurato per questo subscriber" }, { status: 400 });
+    }
+
+    console.log('🔍 Using software template:', {
+      subject: subscriber.software.payment_template_subject,
+      body: subscriber.software.payment_template_body
+    });
+
     // Inizializza Resend
     const resend = new Resend(process.env.RESEND_API_KEY);
     
     if (!process.env.RESEND_API_KEY) {
       console.log("⚠️ RESEND_API_KEY non configurata, simulando invio email");
-      const emailContent = generatePaymentEmail(subscriber, checkoutUrl);
+      const emailContent = generatePaymentEmailFromTemplate(subscriber, checkoutUrl);
+      const emailSubject = replaceTemplateVariables(subscriber.software.payment_template_subject, subscriber, checkoutUrl);
       console.log("=== EMAIL DA INVIARE (SIMULATA) ===");
       console.log(`A: ${subscriber.email}`);
-      console.log(`Oggetto: Completare il pagamento per ${subscriber.project_name}`);
+      console.log(`Oggetto: ${emailSubject}`);
       console.log("Contenuto:");
       console.log(emailContent);
       console.log("====================================");
     } else {
       // Invio email reale con Resend
       console.log("📧 Invio email reale con Resend...");
-      const emailContent = generatePaymentEmail(subscriber, checkoutUrl);
+      const emailContent = generatePaymentEmailFromTemplate(subscriber, checkoutUrl);
+      const emailSubject = replaceTemplateVariables(subscriber.software.payment_template_subject, subscriber, checkoutUrl);
       
       try {
         const { data, error } = await resend.emails.send({
           from: 'support-abbonamenti@licenseglobal.it', // Email aziendale
           to: [subscriber.email], // Destinatario reale
-          subject: `Completare il pagamento per ${subscriber.project_name}`,
+          subject: emailSubject,
           html: emailContent,
         });
 
@@ -184,6 +195,110 @@ function generatePaymentEmail(subscriber: any, checkoutUrl: string): string {
     <div class="footer">
       <p>Questo è un messaggio automatico, non rispondere a questa email.</p>
       <p>© 2024 Gestore Abbonamenti Software</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+}
+
+// Funzione helper per sostituire le variabili nel template
+function replaceTemplateVariables(template: string, subscriber: any, checkoutUrl: string): string {
+  const replacements: Record<string, string> = {
+    '{first_name}': subscriber.first_name,
+    '{last_name}': subscriber.last_name,
+    '{email}': subscriber.email,
+    '{project_name}': subscriber.project_name,
+    '{software_name}': subscriber.software?.name || 'Software',
+    '{payment_link}': checkoutUrl,
+    '{subscription_price}': subscriber.subscription_price?.toString() || '0',
+  };
+
+  let result = template;
+  for (const [placeholder, value] of Object.entries(replacements)) {
+    result = result.replace(new RegExp(placeholder, 'g'), value);
+  }
+  return result;
+}
+
+// Funzione per generare email usando il template del software
+function generatePaymentEmailFromTemplate(subscriber: any, checkoutUrl: string): string {
+  const templateBody = subscriber.software?.payment_template_body || 'Template non configurato';
+  const processedBody = replaceTemplateVariables(templateBody, subscriber, checkoutUrl);
+  
+  // Converti i \n in <br> per HTML
+  const htmlBody = processedBody.replace(/\n/g, '<br>');
+  
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Completa il pagamento</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f4f4f4;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e74c3c;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: #e74c3c;
+      margin-bottom: 10px;
+    }
+    .button {
+      display: inline-block;
+      background: #e74c3c;
+      color: white;
+      padding: 15px 30px;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .button:hover {
+      background: #c0392b;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      color: #666;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">🚀 ${subscriber.software?.name || 'Gestore Abbonamenti'}</div>
+    </div>
+
+    <div style="white-space: pre-line;">${htmlBody}</div>
+
+    <div class="footer">
+      <p>Questo è un messaggio automatico, non rispondere a questa email.</p>
+      <p>© 2024 ${subscriber.software?.name || 'Gestore Abbonamenti Software'}</p>
     </div>
   </div>
 </body>
