@@ -20,7 +20,28 @@ export default function SoftwarePage() {
     github_repo_template: "",
     github_token: "",
     payment_template_subject: "Completa il pagamento per {software_name}",
-    payment_template_body: "Ciao {first_name},\n\nPer completare l'abbonamento a {software_name}, clicca sul link qui sotto:\n\n{payment_link}\n\nCordiali saluti,\nIl team di {software_name}",
+    payment_template_body: `Ciao {first_name} {last_name},
+
+Il tuo progetto "{project_name}" è stato configurato con successo!
+
+Per attivare il servizio e iniziare a utilizzare la piattaforma, completa il pagamento dell'abbonamento mensile.
+
+Dettagli Abbonamento:
+• Progetto: {project_name}
+• Prezzo: €{subscription_price}/mese
+• Fatturazione: Mensile
+• Pagamento: Carta di credito/debito
+
+Clicca sul link qui sotto per completare il pagamento:
+
+{payment_link}
+
+Importante: Il link di pagamento è valido per 24 ore. Dopo questo periodo, dovrai richiedere un nuovo link.
+
+Se hai domande o hai bisogno di assistenza, non esitare a contattarci.
+
+Cordiali saluti,
+Il team di {software_name}`,
     is_active: true,
   });
 
@@ -150,7 +171,28 @@ export default function SoftwarePage() {
       github_repo_template: "",
       github_token: "",
       payment_template_subject: "Completa il pagamento per {software_name}",
-      payment_template_body: "Ciao {first_name},\n\nPer completare l'abbonamento a {software_name}, clicca sul link qui sotto:\n\n{payment_link}\n\nCordiali saluti,\nIl team di {software_name}",
+      payment_template_body: `Ciao {first_name} {last_name},
+
+Il tuo progetto "{project_name}" è stato configurato con successo!
+
+Per attivare il servizio e iniziare a utilizzare la piattaforma, completa il pagamento dell'abbonamento mensile.
+
+Dettagli Abbonamento:
+• Progetto: {project_name}
+• Prezzo: €{subscription_price}/mese
+• Fatturazione: Mensile
+• Pagamento: Carta di credito/debito
+
+Clicca sul link qui sotto per completare il pagamento:
+
+{payment_link}
+
+Importante: Il link di pagamento è valido per 24 ore. Dopo questo periodo, dovrai richiedere un nuovo link.
+
+Se hai domande o hai bisogno di assistenza, non esitare a contattarci.
+
+Cordiali saluti,
+Il team di {software_name}`,
       is_active: true,
     });
   };
