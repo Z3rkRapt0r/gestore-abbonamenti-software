@@ -1,20 +1,23 @@
-import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { NextResponse } from "next/server";
 
-// POST /api/debug-login - Debug login
-export async function POST(request: NextRequest) {
+// GET /api/debug-login - Test login con parametri URL
+export async function GET(request: Request) {
   try {
-    console.log('🔍 DEBUG: Test login...');
-    
-    const body = await request.json();
-    const { email, password } = body;
+    const url = new URL(request.url);
+    const email = url.searchParams.get('email');
+    const password = url.searchParams.get('password');
     
     if (!email || !password) {
       return NextResponse.json({
         success: false,
-        error: "Email e password sono obbligatori"
+        error: "Parametri mancanti",
+        message: "Usa: /api/debug-login?email=your-email&password=your-password",
+        example: "/api/debug-login?email=admin@example.com&password=yourpassword"
       }, { status: 400 });
     }
+    
+    // Importa supabase dinamicamente per evitare problemi SSR
+    const { supabase } = await import('@/lib/supabase');
     
     console.log('📝 Tentativo login per:', email);
     
