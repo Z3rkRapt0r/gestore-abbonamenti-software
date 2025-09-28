@@ -16,6 +16,7 @@ export function CreateSubscriberForm({ onSubmit, loading = false }: CreateSubscr
     email: '',
     project_name: '',
     software_id: '',
+    client_slug: '',
     vercel_token: '',
     vercel_team_id: '',
     supabase_info: '',
@@ -67,6 +68,10 @@ export function CreateSubscriberForm({ onSubmit, loading = false }: CreateSubscr
       newErrors.software_id = 'Il software è obbligatorio';
     }
 
+    if (!validateRequired(formData.client_slug)) {
+      newErrors.client_slug = 'Lo slug del cliente è obbligatorio';
+    }
+
     if (!validateRequired(formData.vercel_token)) {
       newErrors.vercel_token = 'Il token Vercel è obbligatorio';
     }
@@ -95,6 +100,7 @@ export function CreateSubscriberForm({ onSubmit, loading = false }: CreateSubscr
         email: '',
         project_name: '',
         software_id: '',
+        client_slug: '',
         vercel_token: '',
         vercel_team_id: '',
         supabase_info: '',
@@ -188,6 +194,29 @@ export function CreateSubscriberForm({ onSubmit, loading = false }: CreateSubscr
         />
         {errors.project_name && (
           <p className="mt-1 text-sm text-red-600">{errors.project_name}</p>
+        )}
+      </div>
+
+      <div>
+        <label htmlFor="client_slug" className="block text-sm font-medium text-gray-700">
+          Slug Cliente *
+        </label>
+        <input
+          type="text"
+          name="client_slug"
+          id="client_slug"
+          value={formData.client_slug}
+          onChange={handleInputChange}
+          className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm ${
+            errors.client_slug ? 'border-red-300' : ''
+          }`}
+          placeholder="mario-rossi"
+        />
+        <p className="mt-1 text-sm text-gray-500">
+          Identificativo univoco del cliente (solo lettere, numeri e trattini)
+        </p>
+        {errors.client_slug && (
+          <p className="mt-1 text-sm text-red-600">{errors.client_slug}</p>
         )}
       </div>
 
