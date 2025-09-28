@@ -89,7 +89,21 @@ export const db = {
   async getSubscriberById(id: string): Promise<Subscriber | null> {
     const { data, error } = await supabaseAdmin
       .from('subscribers')
-      .select('*')
+      .select(`
+        *,
+        software:software_id (
+          id,
+          name,
+          description,
+          github_repo_template,
+          github_token,
+          payment_template_subject,
+          payment_template_body,
+          is_active,
+          created_at,
+          updated_at
+        )
+      `)
       .eq('id', id)
       .single()
     
