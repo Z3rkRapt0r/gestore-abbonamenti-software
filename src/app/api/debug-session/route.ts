@@ -54,8 +54,8 @@ export async function GET() {
         last_sign_in_at: user.last_sign_in_at
       } : null,
       errors: {
-        sessionError: sessionError?.message,
-        userError: userError?.message
+        sessionError: sessionError ? (sessionError as any).message : null,
+        userError: userError ? (userError as any).message : null
       }
     });
     
