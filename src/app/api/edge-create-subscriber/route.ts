@@ -83,6 +83,7 @@ export async function POST(request: NextRequest) {
 
 
     // Inserimento diretto nel database con controllo esplicito
+    console.log('🔍 Inserting subscriber data:', subscriberData);
     const { data: newSubscriber, error } = await supabase
       .from('subscribers')
       .insert(subscriberData)
@@ -90,11 +91,16 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
+      console.log('❌ Database error:', error);
       return NextResponse.json({ 
         error: "Errore nella creazione subscriber",
-        details: error.message
+        details: error.message,
+        code: error.code,
+        hint: error.hint
       }, { status: 500 });
     }
+
+    console.log('✅ Subscriber created successfully:', newSubscriber);
 
     return NextResponse.json({
       success: true,
