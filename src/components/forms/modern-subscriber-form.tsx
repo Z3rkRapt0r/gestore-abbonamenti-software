@@ -213,6 +213,8 @@ export function ModernSubscriberForm({ onSubmit, loading = false, onCancel }: Mo
         last_name: '',
         email: '',
         project_name: '',
+        software_id: '',
+        client_slug: '',
         vercel_token: '',
         vercel_team_id: '',
         supabase_info: '',
