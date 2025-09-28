@@ -226,8 +226,17 @@ function generatePaymentEmailFromTemplate(subscriber: any, checkoutUrl: string):
   const templateBody = subscriber.software?.payment_template_body || 'Template non configurato';
   const processedBody = replaceTemplateVariables(templateBody, subscriber, checkoutUrl);
   
-  // Converti i \n in <br> per HTML
+  // Se il template contiene già HTML completo, usalo direttamente
+  if (templateBody.includes('<html>') || templateBody.includes('<!DOCTYPE')) {
+    return processedBody;
+  }
+  
+  // Altrimenti, wrappa il testo in HTML con grafica e pulsante
   const htmlBody = processedBody.replace(/\n/g, '<br>');
+  
+  // Estrai il pulsante dal template se presente
+  const buttonMatch = processedBody.match(/\{payment_link\}/);
+  const hasButton = buttonMatch !== null;
   
   return `
 <!DOCTYPE html>
@@ -278,6 +287,12 @@ function generatePaymentEmailFromTemplate(subscriber: any, checkoutUrl: string):
     .button:hover {
       background: #c0392b;
     }
+    .details {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
     .footer {
       text-align: center;
       margin-top: 30px;
@@ -292,9 +307,18 @@ function generatePaymentEmailFromTemplate(subscriber: any, checkoutUrl: string):
   <div class="container">
     <div class="header">
       <div class="logo">🚀 ${subscriber.software?.name || 'Gestore Abbonamenti'}</div>
+      <h1>Completa il pagamento</h1>
     </div>
 
     <div style="white-space: pre-line;">${htmlBody}</div>
+
+    ${hasButton ? `
+    <div style="text-align: center;">
+      <a href="${checkoutUrl}" class="button">
+        💳 Completa il Pagamento
+      </a>
+    </div>
+    ` : ''}
 
     <div class="footer">
       <p>Questo è un messaggio automatico, non rispondere a questa email.</p>

@@ -72,7 +72,16 @@ function replaceTemplateVariables(template: string, data: any): string {
 
 // Funzione per generare HTML di anteprima
 function generateEmailPreview(subject: string, body: string, sampleData: any): string {
+  // Se il template contiene già HTML completo, usalo direttamente
+  if (body.includes('<html>') || body.includes('<!DOCTYPE')) {
+    return body;
+  }
+  
+  // Altrimenti, wrappa il testo in HTML con grafica e pulsante
   const htmlBody = body.replace(/\n/g, '<br>');
+  
+  // Controlla se c'è un link di pagamento per aggiungere il pulsante
+  const hasButton = body.includes('{payment_link}');
   
   return `
 <!DOCTYPE html>
@@ -133,6 +142,12 @@ function generateEmailPreview(subject: string, body: string, sampleData: any): s
     .button:hover {
       background: #c0392b;
     }
+    .details {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
     .footer {
       text-align: center;
       margin-top: 30px;
@@ -149,10 +164,18 @@ function generateEmailPreview(subject: string, body: string, sampleData: any): s
     
     <div class="header">
       <div class="logo">🚀 ${sampleData.software_name}</div>
-      <h2>${subject}</h2>
+      <h1>Completa il pagamento</h1>
     </div>
 
     <div style="white-space: pre-line;">${htmlBody}</div>
+
+    ${hasButton ? `
+    <div style="text-align: center;">
+      <a href="${sampleData.payment_link}" class="button">
+        💳 Completa il Pagamento
+      </a>
+    </div>
+    ` : ''}
 
     <div class="footer">
       <p>Questo è un messaggio automatico, non rispondere a questa email.</p>
