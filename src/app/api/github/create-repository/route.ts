@@ -19,11 +19,25 @@ export async function POST(request: NextRequest) {
 
     // Recupera i dati del subscriber
     const subscriber = await db.getSubscriberById(subscriberId);
+    console.log('🔍 Subscriber data:', {
+      id: subscriber?.id,
+      email: subscriber?.email,
+      software_id: subscriber?.software_id,
+      software: subscriber?.software ? {
+        id: subscriber.software.id,
+        name: subscriber.software.name,
+        github_repo_template: subscriber.software.github_repo_template,
+        github_token: subscriber.software.github_token ? 'Present' : 'Missing'
+      } : 'Not loaded'
+    });
+
     if (!subscriber) {
+      console.log('❌ Subscriber not found');
       return NextResponse.json({ error: "Subscriber non trovato" }, { status: 404 });
     }
 
     if (!subscriber.software) {
+      console.log('❌ Software not configured for subscriber');
       return NextResponse.json({ error: "Software non configurato per questo subscriber" }, { status: 400 });
     }
 
