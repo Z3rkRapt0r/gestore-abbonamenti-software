@@ -101,6 +101,30 @@ export default function Dashboard() {
     }
   };
 
+  // Funzione per creare repository GitHub
+  const createGitHubRepository = async (subscriberId: string) => {
+    try {
+      const response = await fetch('/api/github/create-repository', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscriberId }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Ricarica la lista per aggiornare l'URL del repository
+        loadSubscribers();
+        alert('Repository GitHub creato con successo!');
+      } else {
+        alert(`Errore: ${result.error || 'Qualcosa è andato storto.'}`);
+      }
+    } catch (error) {
+      console.error('Errore nella creazione repository GitHub:', error);
+      alert('Errore di rete nella creazione repository GitHub.');
+    }
+  };
+
   // Funzione per creare link di pagamento
   const createPaymentLink = async (subscriberId: string) => {
     try {
@@ -411,6 +435,31 @@ export default function Dashboard() {
                   </div>
                 )}
                       
+                      {/* GitHub Repository */}
+                      {subscriber.github_repo_url ? (
+                        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <p className="text-xs font-medium text-green-800 mb-2">🐙 Repository GitHub</p>
+                          <a 
+                            href={subscriber.github_repo_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-green-600 hover:text-green-800 underline"
+                          >
+                            {subscriber.github_repo_url}
+                          </a>
+                        </div>
+                      ) : (
+                        <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                          <p className="text-xs font-medium text-gray-800 mb-2">🐙 Repository GitHub</p>
+                          <button
+                            onClick={() => createGitHubRepository(subscriber.id)}
+                            className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-xs hover:bg-gray-200 transition-colors"
+                          >
+                            📦 Crea Repository
+                          </button>
+                        </div>
+                      )}
+
                       <div className="mt-4 flex gap-2">
                         <button 
                           onClick={() => setEditingSubscriber(subscriber)}
