@@ -227,10 +227,10 @@ export default function Dashboard() {
               
               <div className="flex space-x-2">
                 <button
-                  onClick={() => router.push("/settings")}
+                  onClick={() => router.push("/software")}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white/50 hover:bg-white/80 rounded-lg transition-all duration-200 border border-gray-200"
                 >
-                  ⚙️ Impostazioni
+                  🛠️ Software
                 </button>
                 <button
                   onClick={signOut}
@@ -457,10 +457,10 @@ export default function Dashboard() {
                   </button>
                   
                   <button 
-                    onClick={() => router.push("/settings")}
+                    onClick={() => router.push("/software")}
                     className="px-8 py-4 bg-white/80 text-gray-700 font-semibold rounded-xl hover:bg-white transition-all duration-200 border border-gray-200 shadow-lg hover:shadow-xl"
                   >
-                    ⚙️ Configura Impostazioni
+                    🛠️ Gestisci Software
                   </button>
                 </div>
               </div>
