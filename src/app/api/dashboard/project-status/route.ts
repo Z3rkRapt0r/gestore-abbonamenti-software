@@ -51,17 +51,10 @@ export async function PUT(request: NextRequest) {
     const finalProjectStatus = subscription_status === 'ACTIVE' ? isOnline : false;
     
     // Calcola la data di disattivazione automatica se il progetto viene impostato online
-    let autoDisableDate = null;
-    if (finalProjectStatus && subscription_status === 'ACTIVE' && subscriber.next_billing_date) {
-      // Se il progetto è online e c'è una data di fatturazione, calcola quando sarà disattivato automaticamente
-      const billingDate = new Date(subscriber.next_billing_date);
-      const now = new Date();
-      
-      // Se la data di fatturazione è nel futuro, quella sarà la data di disattivazione automatica
-      if (billingDate > now) {
-        autoDisableDate = billingDate.toISOString();
-      }
-    }
+    // Usa sempre la next_billing_date disponibile (senza controllo temporale)
+    const autoDisableDate = (finalProjectStatus && subscription_status === 'ACTIVE' && subscriber.next_billing_date)
+      ? new Date(subscriber.next_billing_date).toISOString()
+      : null;
     
     console.log('📡 Chiamata API Vercel:', {
       edgeConfigId: edge_config_id,
