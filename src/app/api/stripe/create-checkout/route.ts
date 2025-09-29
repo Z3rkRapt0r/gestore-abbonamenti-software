@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
     let customerId = subscriber.stripe_customer_id;
     
     if (!customerId) {
+      // Crea nuovo customer
       const customer = await stripe.customers.create({
         email: subscriber.email,
         name: `${subscriber.first_name} ${subscriber.last_name}`,
@@ -65,6 +66,32 @@ export async function POST(request: NextRequest) {
       await db.updateSubscriber(subscriber.id, {
         stripe_customer_id: customerId,
       });
+    } else {
+      // Verifica se il customer esiste ancora su Stripe
+      try {
+        await stripe.customers.retrieve(customerId);
+        console.log('✅ Customer Stripe esistente trovato:', customerId);
+      } catch (error: any) {
+        console.log('⚠️ Customer Stripe non trovato, creando nuovo customer:', error.message);
+        
+        // Il customer non esiste più, crea un nuovo customer
+        const customer = await stripe.customers.create({
+          email: subscriber.email,
+          name: `${subscriber.first_name} ${subscriber.last_name}`,
+          metadata: {
+            subscriber_id: subscriber.id,
+            project_name: subscriber.project_name,
+          },
+        });
+        customerId = customer.id;
+
+        // Aggiorna il subscriber con il nuovo customer ID
+        await db.updateSubscriber(subscriber.id, {
+          stripe_customer_id: customerId,
+        });
+        
+        console.log('✅ Nuovo customer Stripe creato:', customerId);
+      }
     }
 
     // Determina intervallo in base al tipo di abbonamento selezionato
