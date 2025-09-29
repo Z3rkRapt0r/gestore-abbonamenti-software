@@ -134,3 +134,72 @@ export async function PUT(request: NextRequest) {
     }, { status: 500 });
   }
 }
+
+// GET /api/dashboard/project-status?subscriberId=... - Legge lo stato corrente del progetto da Vercel Edge Config
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const subscriberId = searchParams.get('subscriberId');
+
+    if (!subscriberId) {
+      return NextResponse.json({ error: 'subscriberId richiesto' }, { status: 400 });
+    }
+
+    // Recupera i dati dell'abbonato
+    const { data: subscriber, error: fetchError } = await supabase
+      .from('subscribers')
+      .select('*')
+      .eq('id', subscriberId)
+      .single();
+
+    if (fetchError || !subscriber) {
+      return NextResponse.json({ error: 'Abbonato non trovato' }, { status: 404 });
+    }
+
+    const { vercel_token, vercel_team_id, edge_config_id, edge_key, subscription_status, next_billing_date } = subscriber;
+
+    if (!vercel_token || !edge_config_id) {
+      return NextResponse.json({
+        error: 'Dati Vercel mancanti',
+        missing: {
+          vercel_token: !vercel_token,
+          edge_config_id: !edge_config_id,
+        }
+      }, { status: 400 });
+    }
+
+    // Legge l'item dall'Edge Config
+    const base = `https://api.vercel.com/v1/edge-config/${edge_config_id}/items`;
+    const qs = vercel_team_id ? `?teamId=${encodeURIComponent(vercel_team_id)}&key=${encodeURIComponent(edge_key || 'maintenance')}` : `?key=${encodeURIComponent(edge_key || 'maintenance')}`;
+
+    const res = await fetch(base + qs, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${vercel_token}`,
+      }
+    });
+
+    if (!res.ok) {
+      const txt = await res.text();
+      return NextResponse.json({ error: 'Errore lettura Edge Config', detail: txt }, { status: 502 });
+    }
+
+    const data = await res.json() as { items?: Array<{ key: string; value: unknown }>; item?: { key: string; value: unknown } };
+
+    // API Vercel può restituire {item} o {items}
+    const item = (data as any).item ?? (Array.isArray((data as any).items) ? (data as any).items.find((i: any) => i.key === (edge_key || 'maintenance')) : null);
+    const maintenanceValue = item ? (item.value as boolean) : true; // default true = offline per sicurezza
+
+    const isOnline = !maintenanceValue;
+    const autoDisableDate = (isOnline && next_billing_date) ? new Date(next_billing_date).toISOString() : null;
+
+    return NextResponse.json({
+      success: true,
+      isOnline,
+      subscriptionStatus: subscription_status,
+      autoDisableDate,
+    });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

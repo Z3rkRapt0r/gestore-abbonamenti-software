@@ -26,13 +26,28 @@ export default function Dashboard() {
       const response = await fetch('/api/dashboard/subscribers');
       if (response.ok) {
         const data = await response.json();
-        // Inizializza lo stato del progetto per ogni subscriber
-        const subscribersWithStatus = data.map((subscriber: any) => ({
-          ...subscriber,
-          projectStatus: subscriber.subscription_status === 'ACTIVE' ? 'offline' : 'offline', // Default offline
-          autoDisableDate: null
-        }));
-        setSubscribers(subscribersWithStatus);
+        // Per ogni subscriber, recupera lo stato reale del progetto da Edge Config
+        const enriched = await Promise.all(
+          data.map(async (subscriber: any) => {
+            try {
+              const statusRes = await fetch(`/api/dashboard/project-status?subscriberId=${subscriber.id}`);
+              if (statusRes.ok) {
+                const statusJson = await statusRes.json();
+                return {
+                  ...subscriber,
+                  projectStatus: statusJson.isOnline ? 'online' : 'offline',
+                  autoDisableDate: statusJson.autoDisableDate || null,
+                };
+              }
+            } catch {}
+            return {
+              ...subscriber,
+              projectStatus: 'offline',
+              autoDisableDate: null,
+            };
+          })
+        );
+        setSubscribers(enriched);
       } else {
         console.error('Errore nel caricamento abbonati');
       }
