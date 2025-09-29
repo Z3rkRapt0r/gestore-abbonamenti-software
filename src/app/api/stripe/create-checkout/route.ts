@@ -67,14 +67,21 @@ export async function POST(request: NextRequest) {
         stripe_customer_id: customerId,
       });
     } else {
-      // Verifica se il customer esiste ancora su Stripe
+      // Verifica se il customer esiste ancora su Stripe e non è cancellato
       try {
-        await stripe.customers.retrieve(customerId);
-        console.log('✅ Customer Stripe esistente trovato:', customerId);
-      } catch (error: any) {
-        console.log('⚠️ Customer Stripe non trovato, creando nuovo customer:', error.message);
+        const customer = await stripe.customers.retrieve(customerId);
         
-        // Il customer non esiste più, crea un nuovo customer
+        // Controlla se il customer è cancellato
+        if (customer.deleted) {
+          console.log('⚠️ Customer Stripe cancellato, creando nuovo customer');
+          throw new Error('Customer deleted');
+        }
+        
+        console.log('✅ Customer Stripe esistente e attivo trovato:', customerId);
+      } catch (error: any) {
+        console.log('⚠️ Customer Stripe non utilizzabile, creando nuovo customer:', error.message);
+        
+        // Il customer non esiste più o è cancellato, crea un nuovo customer
         const customer = await stripe.customers.create({
           email: subscriber.email,
           name: `${subscriber.first_name} ${subscriber.last_name}`,
