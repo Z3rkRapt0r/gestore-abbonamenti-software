@@ -393,7 +393,7 @@ export default function Dashboard() {
                        subscriber.subscription_status === 'PAST_DUE' ? '⚠️ Scaduto' :
                        '❌ Inattivo'}
                     </span>
-                    {subscriber.subscription_status === 'PENDING' && (
+                    {(subscriber.subscription_status === 'PENDING' || subscriber.subscription_status === 'CANCELED') && (
                       <button
                         onClick={() => createPaymentLink(subscriber.id)}
                         className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200 transition-colors"
