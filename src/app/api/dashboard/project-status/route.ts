@@ -192,9 +192,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (resKey.ok) {
-      const dataKey = await resKey.json() as { item?: { key: string; value: unknown } };
+      const dataKey = await resKey.json() as Array<{ key: string; value: unknown }>;
       console.log('[project-status:get] Key response:', JSON.stringify(dataKey));
-      maintenanceValue = dataKey.item ? Boolean((dataKey.item as any).value) : null;
+      const found = Array.isArray(dataKey) ? dataKey.find(item => item.key === keyName) : null;
+      maintenanceValue = found ? Boolean(found.value) : null;
     } else {
       const txt = await resKey.text();
       console.error('❌ Errore lettura Edge Config (key):', {
@@ -220,9 +221,10 @@ export async function GET(request: NextRequest) {
       });
       
       if (retryRes.ok) {
-        const dataKey = await retryRes.json() as { item?: { key: string; value: unknown } };
+        const dataKey = await retryRes.json() as Array<{ key: string; value: unknown }>;
         console.log('[project-status:get] Retry response:', JSON.stringify(dataKey));
-        maintenanceValue = dataKey.item ? Boolean((dataKey.item as any).value) : null;
+        const found = Array.isArray(dataKey) ? dataKey.find(item => item.key === keyName) : null;
+        maintenanceValue = found ? Boolean(found.value) : null;
         
         if (maintenanceValue !== null) {
           console.log('[project-status:get] Retry found key:', keyName, 'value:', maintenanceValue);
