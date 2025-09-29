@@ -264,6 +264,11 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     is_active: subscription.status === 'active',
   });
 
+  // Imposta automaticamente il progetto offline se l'abbonamento non è attivo
+  if (status !== 'ACTIVE' && subscriber.edge_config_id && subscriber.vercel_token) {
+    await setProjectOffline(subscriber);
+  }
+
   console.log(`Subscription updated for subscriber: ${subscriberId}, status: ${status}`);
 }
 
@@ -275,10 +280,21 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     return;
   }
 
+  const subscriber = await db.getSubscriberById(subscriberId);
+  if (!subscriber) {
+    console.error(`Subscriber not found: ${subscriberId}`);
+    return;
+  }
+
   await db.updateSubscriber(subscriberId, {
     subscription_status: 'CANCELED',
     is_active: false,
   });
+
+  // Imposta automaticamente il progetto offline quando l'abbonamento viene cancellato
+  if (subscriber.edge_config_id && subscriber.vercel_token) {
+    await setProjectOffline(subscriber);
+  }
 
   console.log(`Subscription deleted for subscriber: ${subscriberId}`);
 }
@@ -347,10 +363,21 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     return;
   }
 
+  const subscriber = await db.getSubscriberById(subscriberId);
+  if (!subscriber) {
+    console.error(`Subscriber not found: ${subscriberId}`);
+    return;
+  }
+
   await db.updateSubscriber(subscriberId, {
     subscription_status: 'PAST_DUE',
     is_active: false,
   });
+
+  // Imposta automaticamente il progetto offline quando il pagamento fallisce
+  if (subscriber.edge_config_id && subscriber.vercel_token) {
+    await setProjectOffline(subscriber);
+  }
 
   // Registra il pagamento fallito nella tabella payments
   await db.createPayment({
@@ -363,4 +390,43 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   });
 
   console.log(`Payment failed for subscriber: ${subscriberId}`);
+}
+
+// Funzione helper per impostare automaticamente il progetto offline
+async function setProjectOffline(subscriber: any) {
+  try {
+    const { vercel_token, vercel_team_id, edge_config_id, edge_key } = subscriber;
+    
+    if (!vercel_token || !edge_config_id) {
+      console.log('⚠️ Vercel token o Edge Config ID mancanti per impostare offline automaticamente');
+      return;
+    }
+
+    console.log(`🔴 Impostando progetto offline automaticamente per: ${subscriber.first_name} ${subscriber.last_name}`);
+
+    // Chiamata API Vercel Edge Config per impostare offline
+    const base = `https://api.vercel.com/v1/edge-config/${edge_config_id}/items`;
+    const qs = vercel_team_id ? `?teamId=${encodeURIComponent(vercel_team_id)}` : '';
+
+    const res = await fetch(base + qs, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${vercel_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        items: [
+          { operation: 'upsert', key: edge_key || 'maintenance', value: true } // true = offline
+        ]
+      })
+    });
+
+    if (res.ok) {
+      console.log(`✅ Progetto impostato offline automaticamente per: ${subscriber.first_name} ${subscriber.last_name}`);
+    } else {
+      console.error(`❌ Errore nell'impostare offline automaticamente:`, await res.text());
+    }
+  } catch (error) {
+    console.error(`❌ Errore nella funzione setProjectOffline:`, error);
+  }
 }

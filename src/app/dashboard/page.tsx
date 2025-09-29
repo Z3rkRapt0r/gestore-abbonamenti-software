@@ -37,19 +37,19 @@ export default function Dashboard() {
     }
   };
 
-  // Funzione per toggle manutenzione
-  const toggleMaintenance = async (subscriberId: string, maintenance: boolean) => {
+  // Funzione per toggle gestione progetto
+  const toggleProjectStatus = async (subscriberId: string, isOnline: boolean) => {
     try {
       setMaintenanceLoading(subscriberId);
       
-      const response = await fetch('/api/dashboard/maintenance', {
+      const response = await fetch('/api/dashboard/project-status', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           subscriberId,
-          maintenance
+          isOnline
         }),
       });
 
@@ -64,8 +64,8 @@ export default function Dashboard() {
         }
       }
     } catch (error) {
-      console.error('Errore durante il toggle manutenzione:', error);
-      alert('❌ Errore durante l\'operazione di manutenzione');
+      console.error('Errore durante il toggle gestione progetto:', error);
+      alert('❌ Errore durante l\'operazione di gestione progetto');
     } finally {
       setMaintenanceLoading(null);
     }
@@ -404,37 +404,36 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Manutenzione Vercel */}
-                {subscriber.edge_config_id && subscriber.vercel_token && subscriber.subscription_status === 'ACTIVE' ? (
-                  <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-xs font-medium text-yellow-800 mb-2">🔧 Manutenzione Vercel</p>
+                {/* Gestione Progetto */}
+                {subscriber.edge_config_id && subscriber.vercel_token ? (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs font-medium text-blue-800 mb-2">🌐 Gestione Progetto</p>
                     <div className="flex gap-2">
                       <button
-                        onClick={() => toggleMaintenance(subscriber.id, true)}
+                        onClick={() => toggleProjectStatus(subscriber.id, false)}
                         disabled={maintenanceLoading === subscriber.id}
                         className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {maintenanceLoading === subscriber.id ? '⏳' : '🚫'} Attiva Manutenzione
+                        {maintenanceLoading === subscriber.id ? '⏳' : '🔴'} Imposta Offline
                       </button>
                       <button
-                        onClick={() => toggleMaintenance(subscriber.id, false)}
+                        onClick={() => toggleProjectStatus(subscriber.id, true)}
                         disabled={maintenanceLoading === subscriber.id}
                         className="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-xs hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {maintenanceLoading === subscriber.id ? '⏳' : '✅'} Disattiva Manutenzione
+                        {maintenanceLoading === subscriber.id ? '⏳' : '🟢'} Imposta Online
                       </button>
                     </div>
-                  </div>
-                ) : subscriber.subscription_status !== 'ACTIVE' ? (
-                  <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                    <p className="text-xs text-gray-600">
-                      ⚠️ Manutenzione disponibile solo per abbonamenti attivi
-                    </p>
+                    {subscriber.subscription_status !== 'ACTIVE' && (
+                      <p className="text-xs text-orange-600 mt-2">
+                        ⚠️ Progetto automaticamente offline per abbonamento non attivo
+                      </p>
+                    )}
                   </div>
                 ) : (
                   <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
                     <p className="text-xs text-gray-600">
-                      ⚠️ Edge Config non configurato
+                      ⚠️ Edge Config non configurato per gestione progetto
                     </p>
                   </div>
                 )}
