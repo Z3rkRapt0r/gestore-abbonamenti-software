@@ -64,6 +64,30 @@ export class GitHubService {
   }
 
   /**
+   * Elimina un repository GitHub
+   */
+  async deleteRepository(owner: string, repoName: string): Promise<boolean> {
+    try {
+      console.log(`🗑️ Eliminando repository GitHub: ${owner}/${repoName}`);
+      
+      await this.octokit.rest.repos.delete({
+        owner,
+        repo: repoName,
+      });
+      
+      console.log(`✅ Repository ${owner}/${repoName} eliminato con successo`);
+      return true;
+    } catch (error: any) {
+      console.error(`❌ Errore nell'eliminazione repository ${owner}/${repoName}:`, error);
+      if (error.status === 404) {
+        console.log(`⚠️ Repository ${owner}/${repoName} non trovato (già eliminato?)`);
+        return true; // Considera come successo se non esiste
+      }
+      throw error;
+    }
+  }
+
+  /**
    * Personalizza i file del repository con i dati del cliente
    */
   private async customizeRepositoryFiles(

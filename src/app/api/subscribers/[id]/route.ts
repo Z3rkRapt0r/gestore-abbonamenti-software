@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth-server";
 import { db } from "@/lib/database";
 import { deleteCustomerFromStripe } from "@/lib/stripe-helpers";
+import { GitHubService, parseGitHubUrl } from "@/lib/github";
 
 // GET /api/subscribers/[id] - Recupera un subscriber specifico
 export async function GET(
@@ -159,7 +160,48 @@ export async function DELETE(
       console.log('ℹ️ Nessun dato Stripe da cancellare');
     }
 
-    // 2. ELIMINAZIONE DAL DATABASE
+    // 2. CANCELLAZIONE REPOSITORY GITHUB (se esiste)
+    let githubDeletionResult = null;
+    if (existingSubscriber.github_repo_url) {
+      console.log('🔄 Iniziando cancellazione repository GitHub...');
+      console.log(`   - Repository URL: ${existingSubscriber.github_repo_url}`);
+      
+      try {
+        // Estrai owner e repo dall'URL
+        const githubInfo = parseGitHubUrl(existingSubscriber.github_repo_url);
+        if (githubInfo && existingSubscriber.software?.github_token) {
+          const githubService = new GitHubService(existingSubscriber.software.github_token);
+          const deleted = await githubService.deleteRepository(githubInfo.owner, githubInfo.repo);
+          
+          githubDeletionResult = {
+            success: deleted,
+            repository: `${githubInfo.owner}/${githubInfo.repo}`,
+            url: existingSubscriber.github_repo_url
+          };
+          
+          if (deleted) {
+            console.log('✅ Repository GitHub eliminato con successo');
+          }
+        } else {
+          console.log('⚠️ Impossibile parsare URL GitHub o token mancante');
+          githubDeletionResult = {
+            success: false,
+            error: 'URL GitHub non valido o token mancante'
+          };
+        }
+      } catch (githubError: any) {
+        console.error('❌ Errore nella cancellazione repository GitHub:', githubError);
+        githubDeletionResult = {
+          success: false,
+          error: githubError.message
+        };
+        // Continuiamo comunque con l'eliminazione dal database
+      }
+    } else {
+      console.log('ℹ️ Nessun repository GitHub da cancellare');
+    }
+
+    // 3. ELIMINAZIONE DAL DATABASE
     console.log('🗑️ Eliminando subscriber dal database...');
     const deleteResult = await db.deleteSubscriber(id);
     
@@ -172,7 +214,7 @@ export async function DELETE(
     
     console.log('✅ Subscriber eliminato dal database con successo:', existingSubscriber.email);
 
-    // 3. RISPOSTA CON DETTAGLI
+    // 4. RISPOSTA CON DETTAGLI
     const response: any = {
       success: true,
       message: "Subscriber eliminato con successo",
@@ -183,7 +225,13 @@ export async function DELETE(
           subscriptionCanceled: stripeDeletionResult.subscriptionCanceled || false,
           customerDeleted: stripeDeletionResult.customerDeleted || false,
           errors: stripeDeletionResult.errors || []
-        } : "Nessun dato Stripe da cancellare"
+        } : "Nessun dato Stripe da cancellare",
+        github: githubDeletionResult ? {
+          success: githubDeletionResult.success,
+          repository: githubDeletionResult.repository || null,
+          url: githubDeletionResult.url || null,
+          error: githubDeletionResult.error || null
+        } : "Nessun repository GitHub da cancellare"
       }
     };
 
