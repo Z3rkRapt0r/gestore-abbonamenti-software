@@ -222,6 +222,12 @@ export async function GET(request: NextRequest) {
       isOnline,
       subscriptionStatus: subscription_status,
       autoDisableDate,
+      debug: {
+        edgeConfigId: edge_config_id,
+        keyUsed: keyName,
+        maintenanceRaw: maintenanceValue,
+        itemsCount: itemsArr.length,
+      }
     });
     resp.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     return resp;
