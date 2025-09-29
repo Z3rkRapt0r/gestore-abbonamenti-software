@@ -41,6 +41,11 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Consenti SEMPRE il webhook Stripe (niente auth / cookie handling)
+  if (request.nextUrl.pathname === '/api/stripe/webhook') {
+    return NextResponse.next()
+  }
+
   // Proteggi le route API che richiedono autenticazione
   if (request.nextUrl.pathname.startsWith('/api/') && 
       !request.nextUrl.pathname.startsWith('/api/debug-') &&
