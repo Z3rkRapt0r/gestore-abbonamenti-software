@@ -227,8 +227,36 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Se ancora non determinato, fallback conservativo a true (offline)
-    if (maintenanceValue === null) maintenanceValue = true;
+    // Se ancora non determinato, prova un retry dopo un breve delay
+    if (maintenanceValue === null) {
+      console.log('[project-status:get] Key not found, retrying after delay...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Retry della lettura
+      const retryRes = await fetch(base + qsAll, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${vercel_token}` }
+      });
+      
+      if (retryRes.ok) {
+        const retryBody = await retryRes.json() as { items?: Array<{ key: string; value: unknown }>; };
+        const retryItems = Array.isArray((retryBody as any).items) ? (retryBody as any).items : [];
+        const retryFound = retryItems.find((i: any) => i.key === keyName);
+        
+        if (retryFound) {
+          maintenanceValue = Boolean(retryFound.value);
+          console.log('[project-status:get] Retry found key:', keyName, 'value:', maintenanceValue);
+        } else {
+          console.log('[project-status:get] Retry also failed, defaulting to offline');
+          maintenanceValue = true;
+        }
+      } else {
+        console.log('[project-status:get] Retry failed, defaulting to offline');
+        maintenanceValue = true;
+      }
+    } else {
+      console.log('[project-status:get] Found key:', keyName, 'value:', maintenanceValue);
+    }
 
     const isOnline = !maintenanceValue;
     const autoDisableDate = (isOnline && next_billing_date) ? new Date(next_billing_date).toISOString() : null;
