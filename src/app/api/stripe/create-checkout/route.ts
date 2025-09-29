@@ -67,6 +67,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Determina intervallo in base al tipo di abbonamento selezionato
+    const subscriptionType = (subscriber as any).subscription_type || 'monthly';
+    const interval: 'day' | 'month' | 'year' =
+      subscriptionType === 'daily' ? 'day' : subscriptionType === 'yearly' ? 'year' : 'month';
+    const prettyInterval = interval === 'day' ? 'giornaliero' : interval === 'year' ? 'annuale' : 'mensile';
+
     // Crea checkout session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -77,11 +83,12 @@ export async function POST(request: NextRequest) {
             currency: 'eur',
             product_data: {
               name: `Abbonamento ${subscriber.project_name}`,
-              description: `Abbonamento mensile per il progetto ${subscriber.project_name}`,
+              description: `Abbonamento ${prettyInterval} per il progetto ${subscriber.project_name}`,
             },
             unit_amount: Math.round(subscriber.subscription_price * 100), // Converti in centesimi
             recurring: {
-              interval: 'month',
+              interval,
+              interval_count: 1,
             },
           },
           quantity: 1,
