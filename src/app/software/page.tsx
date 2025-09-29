@@ -14,6 +14,7 @@ export default function SoftwarePage() {
   const [editingSoftware, setEditingSoftware] = useState<Software | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState<any>(null);
+  const [useCustomHtml, setUseCustomHtml] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -101,7 +102,7 @@ Il team di {software_name}`,
       let templateToUse = formData.payment_template_body;
       let subjectToUse = formData.payment_template_subject;
       
-      if (editingSoftware) {
+      if (editingSoftware && !useCustomHtml) {
         // Recupera il template dal database per il software in modifica
         const dbResponse = await fetch(`/api/software/${editingSoftware.id}`);
         if (dbResponse.ok) {
@@ -115,6 +116,15 @@ Il team di {software_name}`,
             });
           }
         }
+      }
+      
+      // Se usa HTML personalizzato, usa direttamente il template del form
+      if (useCustomHtml) {
+        templateToUse = formData.payment_template_body;
+        console.log('🔍 Usando HTML personalizzato:', {
+          isHtml: templateToUse.includes('<html>'),
+          templateLength: templateToUse.length
+        });
       }
       
       const response = await fetch("/api/email/preview-template", {
@@ -222,6 +232,7 @@ Il team di {software_name}`,
     setEditingSoftware(null);
     setShowPreview(false);
     setPreviewData(null);
+    setUseCustomHtml(false);
     resetForm();
   };
 
@@ -416,18 +427,59 @@ Il team di {software_name}`,
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                       placeholder="Ciao {first_name}, ..."
                       required
+                      style={{ display: useCustomHtml ? 'none' : 'block' }}
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 mt-1" style={{ display: useCustomHtml ? 'none' : 'block' }}>
                       Usa {"{software_name}"}, {"{first_name}"}, {"{payment_link}"} per personalizzare
                     </p>
                     <button
                       type="button"
                       onClick={handlePreviewEmail}
                       className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                      style={{ display: useCustomHtml ? 'none' : 'block' }}
                     >
                       👁️ Anteprima Email
                     </button>
                   </div>
+
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      id="use_custom_html"
+                      checked={useCustomHtml}
+                      onChange={(e) => setUseCustomHtml(e.target.checked)}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="use_custom_html" className="ml-2 text-sm text-gray-700">
+                      Usa HTML personalizzato
+                    </label>
+                  </div>
+
+                  {useCustomHtml && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        HTML Personalizzato *
+                      </label>
+                      <textarea
+                        value={formData.payment_template_body}
+                        onChange={(e) => setFormData({...formData, payment_template_body: e.target.value})}
+                        rows={12}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
+                        placeholder="<html>...</html>"
+                        required
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Inserisci HTML completo. Usa variabili come {`{first_name}`}, {`{payment_link}`}, etc.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handlePreviewEmail}
+                        className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                      >
+                        👁️ Anteprima HTML
+                      </button>
+                    </div>
+                  )}
 
                   <div className="flex items-center">
                     <input
