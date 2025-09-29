@@ -478,15 +478,6 @@ export default function Dashboard() {
                       </div>
                     )}
                     
-                    {/* Debug info */}
-                    <div className="mb-3 p-2 bg-gray-50 border border-gray-200 rounded text-xs">
-                      <p className="text-gray-600 font-medium">🔍 Debug Info:</p>
-                      <p className="text-gray-500">Status: {subscriber.subscription_status}</p>
-                      <p className="text-gray-500">Project Status: {subscriber.projectStatus || 'undefined'}</p>
-                      <p className="text-gray-500">Auto Disable Date: {subscriber.autoDisableDate || 'null'}</p>
-                      <p className="text-gray-500">Next Billing: {subscriber.next_billing_date || 'null'}</p>
-                    </div>
-                    
                     <div className="flex gap-2">
                       <button
                         onClick={() => toggleProjectStatus(subscriber.id, false)}
