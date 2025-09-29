@@ -193,6 +193,7 @@ export async function GET(request: NextRequest) {
 
     if (resKey.ok) {
       const dataKey = await resKey.json() as { item?: { key: string; value: unknown } };
+      console.log('[project-status:get] Key response:', JSON.stringify(dataKey));
       maintenanceValue = dataKey.item ? Boolean((dataKey.item as any).value) : null;
     } else {
       const txt = await resKey.text();
@@ -202,6 +203,8 @@ export async function GET(request: NextRequest) {
         body: txt,
         edgeConfigId: edge_config_id,
         vercelTeamId: vercel_team_id,
+        keyName,
+        url: base + qsKey
       });
     }
 
@@ -218,6 +221,7 @@ export async function GET(request: NextRequest) {
       
       if (retryRes.ok) {
         const dataKey = await retryRes.json() as { item?: { key: string; value: unknown } };
+        console.log('[project-status:get] Retry response:', JSON.stringify(dataKey));
         maintenanceValue = dataKey.item ? Boolean((dataKey.item as any).value) : null;
         
         if (maintenanceValue !== null) {
