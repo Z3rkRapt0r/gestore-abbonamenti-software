@@ -237,6 +237,12 @@ function generatePaymentEmailFromTemplate(subscriber: any, checkoutUrl: string):
   // Controlla se il template originale contiene {payment_link} per aggiungere il pulsante
   const hasButton = templateBody.includes('{payment_link}');
   
+  console.log('🔍 DEBUG generatePaymentEmailFromTemplate:');
+  console.log('  - templateBody length:', templateBody.length);
+  console.log('  - templateBody contains {payment_link}:', templateBody.includes('{payment_link}'));
+  console.log('  - hasButton:', hasButton);
+  console.log('  - processedBody contains payment_link:', processedBody.includes('payment_link'));
+  
   return `
 <!DOCTYPE html>
 <html>

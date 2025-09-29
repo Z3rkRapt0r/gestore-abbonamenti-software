@@ -83,6 +83,11 @@ function generateEmailPreview(subject: string, body: string, sampleData: any): s
   // Controlla se il template originale contiene {payment_link} per aggiungere il pulsante
   const hasButton = body.includes('{payment_link}');
   
+  console.log('🔍 DEBUG generateEmailPreview:');
+  console.log('  - body length:', body.length);
+  console.log('  - body contains {payment_link}:', body.includes('{payment_link}'));
+  console.log('  - hasButton:', hasButton);
+  
   return `
 <!DOCTYPE html>
 <html>
