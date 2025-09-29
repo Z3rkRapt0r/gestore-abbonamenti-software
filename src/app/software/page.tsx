@@ -97,12 +97,32 @@ Il team di {software_name}`,
 
   const handlePreviewEmail = async () => {
     try {
+      // Se stai modificando un software esistente, usa il template dal database
+      let templateToUse = formData.payment_template_body;
+      let subjectToUse = formData.payment_template_subject;
+      
+      if (editingSoftware) {
+        // Recupera il template dal database per il software in modifica
+        const dbResponse = await fetch(`/api/software/${editingSoftware.id}`);
+        if (dbResponse.ok) {
+          const dbResult = await dbResponse.json();
+          if (dbResult.success && dbResult.software) {
+            templateToUse = dbResult.software.payment_template_body;
+            subjectToUse = dbResult.software.payment_template_subject;
+            console.log('🔍 Usando template dal database:', {
+              hasPaymentLink: templateToUse.includes('{payment_link}'),
+              templateLength: templateToUse.length
+            });
+          }
+        }
+      }
+      
       const response = await fetch("/api/email/preview-template", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          templateSubject: formData.payment_template_subject,
-          templateBody: formData.payment_template_body,
+          templateSubject: subjectToUse,
+          templateBody: templateToUse,
           sampleData: {
             first_name: 'Mario',
             last_name: 'Rossi',
