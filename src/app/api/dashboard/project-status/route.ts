@@ -168,27 +168,51 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Legge l'item dall'Edge Config
+    // Legge gli item dall'Edge Config (fetch completo per compatibilità)
     const base = `https://api.vercel.com/v1/edge-config/${edge_config_id}/items`;
-    const qs = vercel_team_id ? `?teamId=${encodeURIComponent(vercel_team_id)}&key=${encodeURIComponent(edge_key || 'maintenance')}` : `?key=${encodeURIComponent(edge_key || 'maintenance')}`;
+    const qsAll = vercel_team_id ? `?teamId=${encodeURIComponent(vercel_team_id)}` : '';
 
-    const res = await fetch(base + qs, {
+    const resAll = await fetch(base + qsAll, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${vercel_token}`,
       }
     });
 
-    if (!res.ok) {
-      const txt = await res.text();
-      return NextResponse.json({ error: 'Errore lettura Edge Config', detail: txt }, { status: 502 });
+    if (!resAll.ok) {
+      const txt = await resAll.text();
+      return NextResponse.json({ error: 'Errore lettura Edge Config (all)', detail: txt }, { status: 502 });
     }
 
-    const data = await res.json() as { items?: Array<{ key: string; value: unknown }>; item?: { key: string; value: unknown } };
+    const bodyAll = await resAll.json() as { items?: Array<{ key: string; value: unknown }>; };
+    const itemsArr = Array.isArray((bodyAll as any).items) ? (bodyAll as any).items : [];
 
-    // API Vercel può restituire {item} o {items}
-    const item = (data as any).item ?? (Array.isArray((data as any).items) ? (data as any).items.find((i: any) => i.key === (edge_key || 'maintenance')) : null);
-    const maintenanceValue = item ? (item.value as boolean) : true; // default true = offline per sicurezza
+    // Log server per diagnosi
+    console.log('[project-status:get] items count =', itemsArr.length);
+
+    const keyName = edge_key || 'maintenance';
+    const found = itemsArr.find((i: any) => i.key === keyName);
+
+    // Se non trovato, tenta query specifica per key
+    let maintenanceValue: boolean | null = null;
+    if (found) {
+      maintenanceValue = Boolean(found.value);
+    } else {
+      const qsKey = vercel_team_id
+        ? `?teamId=${encodeURIComponent(vercel_team_id)}&key=${encodeURIComponent(keyName)}`
+        : `?key=${encodeURIComponent(keyName)}`;
+      const resKey = await fetch(base + qsKey, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${vercel_token}` }
+      });
+      if (resKey.ok) {
+        const dataKey = await resKey.json() as { item?: { key: string; value: unknown } };
+        maintenanceValue = dataKey.item ? Boolean((dataKey.item as any).value) : null;
+      }
+    }
+
+    // Se ancora non determinato, fallback conservativo a true (offline)
+    if (maintenanceValue === null) maintenanceValue = true;
 
     const isOnline = !maintenanceValue;
     const autoDisableDate = (isOnline && next_billing_date) ? new Date(next_billing_date).toISOString() : null;
