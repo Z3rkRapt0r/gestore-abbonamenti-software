@@ -353,30 +353,48 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     return;
   }
   
-  if (!(invoice as any).subscription) return;
+  if (!(invoice as any).subscription) {
+    console.log("⚠️ Invoice senza subscription, ignorando");
+    return;
+  }
+
+  console.log("🔍 Processing payment failed for invoice:", invoice.id);
+  console.log("🔍 Invoice subscription:", (invoice as any).subscription);
 
   const subscription = await stripe.subscriptions.retrieve((invoice as any).subscription as string);
   const subscriberId = subscription.metadata?.subscriber_id;
   
+  console.log("🔍 Subscription metadata:", subscription.metadata);
+  console.log("🔍 Found subscriber_id:", subscriberId);
+  
   if (!subscriberId) {
-    console.error("No subscriber_id in subscription metadata");
+    console.error("❌ No subscriber_id in subscription metadata");
     return;
   }
 
   const subscriber = await db.getSubscriberById(subscriberId);
   if (!subscriber) {
-    console.error(`Subscriber not found: ${subscriberId}`);
+    console.error(`❌ Subscriber not found: ${subscriberId}`);
     return;
   }
+
+  console.log("✅ Subscriber found:", subscriber.email);
+  console.log("🔍 Subscriber edge_config_id:", subscriber.edge_config_id);
+  console.log("🔍 Subscriber vercel_token:", subscriber.vercel_token ? "present" : "missing");
 
   await db.updateSubscriber(subscriberId, {
     subscription_status: 'PAST_DUE',
     is_active: false,
   });
 
+  console.log("✅ Database updated: subscription_status = PAST_DUE");
+
   // Imposta automaticamente il progetto offline quando il pagamento fallisce
   if (subscriber.edge_config_id && subscriber.vercel_token) {
+    console.log("🔴 Calling setProjectOffline...");
     await setProjectOffline(subscriber);
+  } else {
+    console.log("⚠️ Cannot set offline: missing edge_config_id or vercel_token");
   }
 
   // Registra il pagamento fallito nella tabella payments
@@ -389,7 +407,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     failure_reason: 'Payment failed',
   });
 
-  console.log(`Payment failed for subscriber: ${subscriberId}`);
+  console.log(`✅ Payment failed processed for subscriber: ${subscriberId}`);
 }
 
 // Funzione helper per impostare automaticamente il progetto offline
