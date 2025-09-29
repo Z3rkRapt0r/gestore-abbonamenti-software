@@ -111,9 +111,12 @@ export default function SubscriberDetailsModal({
               
               <div className="space-y-3">
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Prezzo Mensile</label>
+                  <label className="text-sm font-medium text-gray-600">
+                    {subscriber.subscription_type === 'daily' ? 'Prezzo Giornaliero' : subscriber.subscription_type === 'yearly' ? 'Prezzo Annuale' : 'Prezzo Mensile'}
+                  </label>
                   <p className="text-gray-900 font-medium">
                     {subscriber.subscription_price ? `€${subscriber.subscription_price}` : 'Non impostato'}
+                    {subscriber.subscription_type === 'daily' ? '/giorno' : subscriber.subscription_type === 'yearly' ? '/anno' : '/mese'}
                   </p>
                 </div>
                 
