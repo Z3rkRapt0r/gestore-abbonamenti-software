@@ -181,7 +181,23 @@ export async function GET(request: NextRequest) {
 
     if (!resAll.ok) {
       const txt = await resAll.text();
-      return NextResponse.json({ error: 'Errore lettura Edge Config (all)', detail: txt }, { status: 502 });
+      console.error('❌ Errore lettura Edge Config (all):', {
+        status: resAll.status,
+        statusText: resAll.statusText,
+        body: txt,
+        edgeConfigId: edge_config_id,
+        vercelTeamId: vercel_team_id,
+        vercelToken: vercel_token.substring(0, 10) + '...'
+      });
+      return NextResponse.json({ 
+        error: 'Errore lettura Edge Config (all)', 
+        detail: txt,
+        debug: {
+          edgeConfigId: edge_config_id,
+          vercelTeamId: vercel_team_id,
+          status: resAll.status
+        }
+      }, { status: 502 });
     }
 
     const bodyAll = await resAll.json() as { items?: Array<{ key: string; value: unknown }>; };
