@@ -30,9 +30,19 @@ export default function Dashboard() {
         const enriched = await Promise.all(
           data.map(async (subscriber: any) => {
             try {
-              const statusRes = await fetch(`/api/dashboard/project-status?subscriberId=${subscriber.id}`);
-              if (statusRes.ok) {
-                const statusJson = await statusRes.json();
+              const readStatus = async () => {
+                const res = await fetch(`/api/dashboard/project-status?subscriberId=${subscriber.id}`, { cache: 'no-store' });
+                if (!res.ok) return null;
+                return await res.json();
+              };
+
+              let statusJson = await readStatus();
+              if (!statusJson) {
+                await new Promise(r => setTimeout(r, 500));
+                statusJson = await readStatus();
+              }
+
+              if (statusJson) {
                 return {
                   ...subscriber,
                   projectStatus: statusJson.isOnline ? 'online' : 'offline',

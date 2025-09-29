@@ -193,12 +193,14 @@ export async function GET(request: NextRequest) {
     const isOnline = !maintenanceValue;
     const autoDisableDate = (isOnline && next_billing_date) ? new Date(next_billing_date).toISOString() : null;
 
-    return NextResponse.json({
+    const resp = NextResponse.json({
       success: true,
       isOnline,
       subscriptionStatus: subscription_status,
       autoDisableDate,
     });
+    resp.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    return resp;
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
