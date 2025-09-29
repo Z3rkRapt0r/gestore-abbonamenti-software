@@ -26,7 +26,13 @@ export default function Dashboard() {
       const response = await fetch('/api/dashboard/subscribers');
       if (response.ok) {
         const data = await response.json();
-        setSubscribers(data);
+        // Inizializza lo stato del progetto per ogni subscriber
+        const subscribersWithStatus = data.map((subscriber: any) => ({
+          ...subscriber,
+          projectStatus: subscriber.subscription_status === 'ACTIVE' ? 'offline' : 'offline', // Default offline
+          autoDisableDate: null
+        }));
+        setSubscribers(subscribersWithStatus);
       } else {
         console.error('Errore nel caricamento abbonati');
       }
@@ -56,6 +62,19 @@ export default function Dashboard() {
       const result = await response.json();
 
       if (response.ok) {
+        // Aggiorna lo stato locale del subscriber con le nuove informazioni
+        setSubscribers(prev => 
+          prev.map(sub => 
+            sub.id === subscriberId 
+              ? { 
+                  ...sub, 
+                  projectStatus: result.isOnline ? 'online' : 'offline',
+                  autoDisableDate: result.autoDisableDate 
+                }
+              : sub
+          )
+        );
+        
         alert(`✅ ${result.message}`);
       } else {
         alert(`❌ Errore: ${result.error}`);
@@ -408,10 +427,36 @@ export default function Dashboard() {
                 {subscriber.edge_config_id && subscriber.vercel_token ? (
                   <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-xs font-medium text-blue-800 mb-2">🌐 Gestione Progetto</p>
+                    
+                    {/* Stato attuale del progetto */}
+                    <div className="mb-3">
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        subscriber.projectStatus === 'online' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {subscriber.projectStatus === 'online' ? '🟢 ONLINE' : '🔴 OFFLINE'}
+                      </span>
+                    </div>
+                    
+                    {/* Data di disattivazione automatica */}
+                    {subscriber.projectStatus === 'online' && subscriber.autoDisableDate && (
+                      <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                        <p className="text-yellow-800 font-medium">⏰ Disattivazione automatica:</p>
+                        <p className="text-yellow-700">
+                          {new Date(subscriber.autoDisableDate).toLocaleString('it-IT', {
+                            day: '2-digit',
+                            month: '2-digit', 
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                    )}
+                    
                     <div className="flex gap-2">
                       <button
                         onClick={() => toggleProjectStatus(subscriber.id, false)}
-                        disabled={maintenanceLoading === subscriber.id}
+                        disabled={maintenanceLoading === subscriber.id || subscriber.projectStatus === 'offline'}
                         className="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-xs hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {maintenanceLoading === subscriber.id ? '⏳' : '🔴'} Imposta Offline

@@ -50,6 +50,9 @@ export interface Subscriber {
   notes?: string;
   // Relazione con software
   software?: Software;
+  // Nuovi campi per gestione progetto
+  projectStatus?: 'online' | 'offline';
+  autoDisableDate?: string;
 }
 
 export interface Payment {
