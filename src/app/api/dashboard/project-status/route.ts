@@ -211,18 +211,16 @@ export async function GET(request: NextRequest) {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Retry della lettura
-      const retryRes = await fetch(base + qsAll, {
+      const retryRes = await fetch(base + qsKey, {
         method: 'GET',
         headers: { Authorization: `Bearer ${vercel_token}` }
       });
       
       if (retryRes.ok) {
-        const retryBody = await retryRes.json() as { items?: Array<{ key: string; value: unknown }>; };
-        const retryItems = Array.isArray((retryBody as any).items) ? (retryBody as any).items : [];
-        const retryFound = retryItems.find((i: any) => i.key === keyName);
+        const dataKey = await retryRes.json() as { item?: { key: string; value: unknown } };
+        maintenanceValue = dataKey.item ? Boolean((dataKey.item as any).value) : null;
         
-        if (retryFound) {
-          maintenanceValue = Boolean(retryFound.value);
+        if (maintenanceValue !== null) {
           console.log('[project-status:get] Retry found key:', keyName, 'value:', maintenanceValue);
         } else {
           console.log('[project-status:get] Retry also failed, defaulting to offline');
