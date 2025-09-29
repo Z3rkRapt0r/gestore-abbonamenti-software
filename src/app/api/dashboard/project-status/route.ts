@@ -168,63 +168,41 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Legge gli item dall'Edge Config (fetch completo per compatibilità)
+    // Usa chiamata specifica per key (meno rate limited rispetto al fetch completo)
     const base = `https://api.vercel.com/v1/edge-config/${edge_config_id}/items`;
-    const qsAll = vercel_team_id ? `?teamId=${encodeURIComponent(vercel_team_id)}` : '';
+    const keyName = edge_key || 'maintenance';
+    const qsKey = vercel_team_id
+      ? `?teamId=${encodeURIComponent(vercel_team_id)}&key=${encodeURIComponent(keyName)}`
+      : `?key=${encodeURIComponent(keyName)}`;
 
-    const resAll = await fetch(base + qsAll, {
+    let maintenanceValue: boolean | null = null;
+    let resKey = await fetch(base + qsKey, {
       method: 'GET',
-      headers: {
-        Authorization: `Bearer ${vercel_token}`,
-      }
+      headers: { Authorization: `Bearer ${vercel_token}` }
     });
 
-    if (!resAll.ok) {
-      const txt = await resAll.text();
-      console.error('❌ Errore lettura Edge Config (all):', {
-        status: resAll.status,
-        statusText: resAll.statusText,
-        body: txt,
-        edgeConfigId: edge_config_id,
-        vercelTeamId: vercel_team_id,
-        vercelToken: vercel_token.substring(0, 10) + '...'
-      });
-      return NextResponse.json({ 
-        error: 'Errore lettura Edge Config (all)', 
-        detail: txt,
-        debug: {
-          edgeConfigId: edge_config_id,
-          vercelTeamId: vercel_team_id,
-          status: resAll.status
-        }
-      }, { status: 502 });
-    }
-
-    const bodyAll = await resAll.json() as { items?: Array<{ key: string; value: unknown }>; };
-    const itemsArr = Array.isArray((bodyAll as any).items) ? (bodyAll as any).items : [];
-
-    // Log server per diagnosi
-    console.log('[project-status:get] items count =', itemsArr.length);
-
-    const keyName = edge_key || 'maintenance';
-    const found = itemsArr.find((i: any) => i.key === keyName);
-
-    // Se non trovato, tenta query specifica per key
-    let maintenanceValue: boolean | null = null;
-    if (found) {
-      maintenanceValue = Boolean(found.value);
-    } else {
-      const qsKey = vercel_team_id
-        ? `?teamId=${encodeURIComponent(vercel_team_id)}&key=${encodeURIComponent(keyName)}`
-        : `?key=${encodeURIComponent(keyName)}`;
-      const resKey = await fetch(base + qsKey, {
+    if (resKey.status === 429) {
+      const txt = await resKey.text();
+      console.warn('[project-status:get] 429 rate limited on key read, backing off 1500ms', txt);
+      await new Promise(r => setTimeout(r, 1500));
+      resKey = await fetch(base + qsKey, {
         method: 'GET',
         headers: { Authorization: `Bearer ${vercel_token}` }
       });
-      if (resKey.ok) {
-        const dataKey = await resKey.json() as { item?: { key: string; value: unknown } };
-        maintenanceValue = dataKey.item ? Boolean((dataKey.item as any).value) : null;
-      }
+    }
+
+    if (resKey.ok) {
+      const dataKey = await resKey.json() as { item?: { key: string; value: unknown } };
+      maintenanceValue = dataKey.item ? Boolean((dataKey.item as any).value) : null;
+    } else {
+      const txt = await resKey.text();
+      console.error('❌ Errore lettura Edge Config (key):', {
+        status: resKey.status,
+        statusText: resKey.statusText,
+        body: txt,
+        edgeConfigId: edge_config_id,
+        vercelTeamId: vercel_team_id,
+      });
     }
 
     // Se ancora non determinato, prova un retry dopo un breve delay
@@ -270,7 +248,6 @@ export async function GET(request: NextRequest) {
         edgeConfigId: edge_config_id,
         keyUsed: keyName,
         maintenanceRaw: maintenanceValue,
-        itemsCount: itemsArr.length,
       }
     });
     resp.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
